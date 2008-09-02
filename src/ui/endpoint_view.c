@@ -141,7 +141,7 @@ static void do_group( struct group *grp )
         }
 
         if ( gui_resolve_names() ) {
-                if ( ! conn_p->metadata.flags & METADATA_RESOLVED ) {
+                if ( ! (conn_p->metadata.flags & METADATA_RESOLVED )) {
                         connection_resolve( conn_p );
                 }
                 if ( conn_p->metadata.rem_hostname[0] != '\0' ) {
