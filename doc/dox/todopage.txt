@@ -1,0 +1,9 @@
+/**
+ * @page todopage1 Plans for the future 
+ *
+
+ @li The /proc file parsing sucks; make it better, a lot better.
+ @li IPv6 -- Routing information is not shown for IPv6 connections
+ @li The ncurses UI is a mess. 
+
+*/

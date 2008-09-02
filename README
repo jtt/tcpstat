@@ -1,0 +1,33 @@
+
+ ABOUT
+
+ tcpstat is a simple program which can be used to monitor active TCP
+ connections. Think about a cross between 'top' and 'netstat'. 
+
+ Tcpstat is written in C and uses ncurses for UI. While still pretty much under
+ the development, the program has reached a state where it might actually be
+ usefull. If it only had proper help and man pages. 
+
+ LICENSING 
+
+ The program is licensed under two-clause BSD license. 
+
+ BUILDING and INSTALLING
+
+ Edit the Makefile to suit your needs. Type 'make' optionally followed by 'make
+ install'
+
+ If you want to enable the debug information, edit src/defs.h and remove
+ comments around #define DEBUG. Then rebuild the application. If built with
+ debugging enabled, the program will write debug information to file debug.txt.
+
+ RUNNING 
+
+ The program has '--help' option which should provide some information on the
+ available command line parameters.
+
+ CONTACT
+
+ Send all bug reports, improvement ideas and such to jtaimisto@gmail.com.
+
+
