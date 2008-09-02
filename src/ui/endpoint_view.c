@@ -201,21 +201,7 @@ int endpoint_update( struct stat_context *ctx )
         /* XXX -- we need to go through this shit with
          * the listening groups too.
          */
-        grp = glist_get_head( ctx->listen_groups );
-        while( grp  != NULL ) {
-                struct tcp_connection *conn_p;
-                conn_p = group_get_parent( grp );
-                if ( conn_p != NULL )
-                        metadata_clear_flags( conn_p->metadata );
-
-                conn_p = group_get_first_conn( grp );
-                while ( conn_p != NULL ) {
-                        metadata_clear_flags( conn_p->metadata );
-                        conn_p = conn_p->next;
-                }
-                grp = grp->next;
-        }
-
+        clear_metadata_flags( ctx->listen_groups );
 
         return 0;
 }

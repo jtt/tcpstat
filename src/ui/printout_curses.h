@@ -41,7 +41,8 @@
  */
 enum gui_view {
         MAIN_VIEW, 
-        ENDPOINT_VIEW 
+        ENDPOINT_VIEW,
+        HELP_VIEW
 };
 /* the linebuf API */
 int write_linebuf( void );
@@ -79,12 +80,17 @@ void gui_print_dbg_banner( struct stat_context *ctx );
 int main_update( struct stat_context *ctx );
 int init_main_view( struct stat_context *ctx );
 int main_input( struct stat_context *ctx, int key );
+void main_print_help();
 
 /* ENDPOINT VIEW */
 int endpoint_input( struct stat_context *ctx, int key );
 int endpoint_update( struct stat_context *ctx );
 int init_endpoint_view( struct stat_context *ctx );
 void deinit_endpoint_view( struct stat_context *ctx );
+
+/* HELP VIEW */
+int init_help_view( struct stat_context *ctx );
+int help_update( struct stat_context *ctx );
 
 #define GUI_MAX_ROW_LEN 200
 

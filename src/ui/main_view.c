@@ -427,6 +427,42 @@ int main_input( struct stat_context *ctx, int key )
         return rv;
 }
 
+void main_print_help() 
+{
+        attron( A_UNDERLINE );
+        add_to_linebuf("\tMain view commands:");
+        write_linebuf();
+        attroff( A_UNDERLINE );
+        add_to_linebuf(" l  ");
+        write_linebuf_partial_attr( A_BOLD);
+        add_to_linebuf(" Toggle display of listening \"connections\"");
+        write_linebuf();
+        add_to_linebuf(" L  ");
+        write_linebuf_partial_attr( A_BOLD);
+        add_to_linebuf(" Toggle lingering of closed connections");
+        write_linebuf();
+        write_linebuf();
+        add_to_linebuf("  Commands for switching grouping of outgoing connections");
+        write_linebuf();
+        add_to_linebuf(" a");
+        write_linebuf_partial_attr( A_BOLD);
+        add_to_linebuf(" group by remote address and port  ");
+        write_linebuf_partial();
+        add_to_linebuf("A");
+        write_linebuf_partial_attr( A_BOLD);
+        add_to_linebuf(" group by remote address");
+        write_linebuf();
+        add_to_linebuf(" P");
+        write_linebuf_partial_attr( A_BOLD);
+        add_to_linebuf(" group by remote port  ");
+        write_linebuf_partial();
+        add_to_linebuf("S");
+        write_linebuf_partial_attr( A_BOLD);
+        add_to_linebuf(" group by connection state");
+        write_linebuf();
+}
+
+
 /** 
  * @brief Initialize the main view. 
  *

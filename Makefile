@@ -42,7 +42,7 @@ INSTALL_FLAGS=-s -m $(INSTALL_MODE)
 
 ## Program definitions 
 OBJS= debug.o stat.o tcpstat.o parser.o connection.o  group.o filter.o 
-UI_OBJS= printout_curses.o view.o banners.o main_view.o endpoint_view.o
+UI_OBJS= printout_curses.o view.o banners.o main_view.o endpoint_view.o help_view.o
 SCOUT_OBJS= ifscout.o pidscout.o tcpscout.o rtscout.o  
 
 PROGNAME=tcpstat

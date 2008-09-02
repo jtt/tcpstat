@@ -70,6 +70,7 @@ void rotate_new_queue( struct stat_context *ctx );
 int purge_closed_connections( struct stat_context *ctx, int closed_cnt );
 int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_storage *remote_addr,
                 enum tcp_state state, ino_t inode, struct stat_context *ctx );
+void clear_metadata_flags( struct glist *list );
 
 
 

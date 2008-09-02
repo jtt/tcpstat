@@ -98,6 +98,9 @@ void ui_update_view( struct stat_context *ctx )
                 case ENDPOINT_VIEW :
                         endpoint_update( ctx );
                         break;
+                case HELP_VIEW :
+                        help_update( ctx );
+                        break;
                 default :
                         main_update( ctx );
                         break;
@@ -167,16 +170,19 @@ void ui_input_loop( struct stat_context *ctx )
                                 init_main_view( ctx );
                         }
                         break;
+                case 'H' :
+                        if ( view == ENDPOINT_VIEW )
+                                deinit_endpoint_view( ctx );
 
+                        init_help_view( ctx );
+                        break;
                 default :
                         TRACE("Not generic command, let view sort it out\n");
                         if ( view == MAIN_VIEW ) {
                                 main_input( ctx, key );
                         } else if ( view == ENDPOINT_VIEW ) {
                                 endpoint_input( ctx, key );
-                        } else {
-                                do_exit(ctx, "No active view!");
-                        }
+                        } 
                         break;
         }
 }

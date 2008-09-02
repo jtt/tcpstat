@@ -484,3 +484,41 @@ void switch_grouping( struct stat_context *ctx, policy_flags_t new_grouping )
         ctx->out_groups = glist_init();
         rotate_new_queue( ctx );
 }
+
+
+/** 
+ * @brief Clear the metatda from all the connections on all the groups on given
+ * list.
+ *
+ * Since we use the connection metadta flags to determine those connections
+ * which are not yet active, every update round all the metadata flags from
+ * active connections have to be cleared. This is normally done by the main
+ * view while printing information about the connections.  
+ *
+ * However, not all view go through all connections, hence this function.
+ * 
+ * @param list Pointer to the list containing the groups whose connections
+ * should be cleared.
+ */
+void clear_metadata_flags( struct glist *list )
+{
+        struct group *grp;
+        struct tcp_connection *conn;
+
+        grp = glist_get_head( list );
+        while ( grp != NULL ) {
+                conn = group_get_parent( grp );
+                if ( conn != NULL )
+                        metadata_clear_flags( conn->metadata );
+
+                conn = group_get_first_conn( grp );
+                while ( conn != NULL ) {
+                        metadata_clear_flags( conn->metadata );
+                        conn = conn->next;
+                }
+                grp = grp->next;
+        }
+}
+
+
+
