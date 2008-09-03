@@ -679,14 +679,15 @@ void connection_deinit( struct tcp_connection *con_p )
 /** 
  * @brief Resolve the service name for the given port.
  * 
- * @param port  The port number to resolve
+ * @param port  The port number to resolve (in host byte order)
  * @param meta_p  Pointer to the metadata struct where the resolved service
  * name should be added. 
  */
 static void resolve_servname( uint16_t port, struct conn_metadata *meta_p )
 {
         struct servent *sent_p;
-        sent_p = getservbyport( port, "tcp" );
+        /* getservbyport() parameter has to be in network byte order */
+        sent_p = getservbyport( htons(port), "tcp" );
         if ( sent_p == NULL ) {
                 DBG( "getservbyport() returned NULL, the port was %d \n", port );
                 meta_p->rem_servname[0] = '\0';
