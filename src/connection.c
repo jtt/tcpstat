@@ -166,8 +166,7 @@ static int chash_fn6( struct chashtable *connection_hash, struct sockaddr_in6 *l
         h = ntohl( raddr->sin6_addr.s6_addr[0] ) ^ htonl( raddr->sin6_addr.s6_addr[3]);
         h += ntohs( raddr->sin6_port ) + ntohs( laddr->sin6_port );
 
-        TRACE( "chash_fn6(<0x%.4x:0x%.2x, 0x%.4x:0x%.2x>)=0x%.2x\n", snip1, laddr->sin6_port, snip2, 
-                        raddr->sin6_port, h & (connection_hash->nrof_buckets -1 ));
+        TRACE( "chash_fn6(..)=0x%.2x\n", h & (connection_hash->nrof_buckets -1 ));
         return h & (connection_hash->nrof_buckets - 1 );
 }
 
