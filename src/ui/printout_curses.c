@@ -147,22 +147,25 @@ int gui_do_routing()
  * @param msg Message to print (NULL is allowed to clear the currently
  * displayed message).
  */
-void print_statusbar( char *msg )
+void gui_print_statusbar( char *msg )
 {
-        int len;
-
-        if ( msg != NULL ) 
-                len = strlen( msg );
-        else 
-                len = 0;
-
         attron(A_BOLD);
         mvprintw(gui_ctx.rows-1, 0, " %s", msg );
-        if ( gui_ctx.more_lines > 0 ) 
-                mvprintw(gui_ctx.rows-1, len+2, "--MORE (%d)--", gui_ctx.more_lines);
         attroff(A_BOLD);
-
+        clrtoeol();
+        refresh();
 }
+
+/**
+ * Clear a message being currently displayed on the statusbar. 
+ */
+void gui_clear_statusbar() 
+{
+        mvprintw(gui_ctx.rows-1,0," ");
+        clrtoeol();
+        refresh();
+}
+
 
 /** 
  * @defgroup linebuf_api Internal functions for handling writing lines to screen. 
@@ -178,31 +181,6 @@ void print_statusbar( char *msg )
  * The whole GUI code is a mess and needs a reorg. 
  *
  */
-
-#ifdef ENABLE_RESOLVE_POPUP
-void resolve_popup( const char *addrstr)
-{
-        char msgbuf[50];
-        sprintf(msgbuf, "resolving %s", addrstr);
-        print_statusbar(msgbuf);
-        refresh();
-}  
-
-void resolve_done_popup() 
-{
-        if ( gui_ctx.rows < 10 || gui_ctx.columns < 30 ) 
-                // no space XXX BOGUS 
-                return;
-
-        print_statusbar("resolved");
-        refresh();
-}
-#endif /* ENABLE_RESOLVE_POPUP */
-
-
-
-
-
 
 /**
  * Append the contents of linebuffer to the window and move to next line. 

@@ -60,7 +60,8 @@ int gui_do_routing();
 int gui_get_columns();
 enum gui_view gui_get_current_view();
 void gui_set_current_view( enum gui_view view );
-void print_statusbar( char *msg );
+void gui_print_statusbar( char *msg );
+void gui_clear_statusbar();
 
 int gui_init( struct stat_context *ctx );
 void gui_deinit( void );

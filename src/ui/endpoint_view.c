@@ -56,6 +56,7 @@
 #include "ifscout.h"
 #include "rtscout.h"
 #include "printout_curses.h"
+#include "ui.h"
 
 /**
  * The active policy when this view was initialized,
@@ -90,7 +91,7 @@ int init_endpoint_view( struct stat_context *ctx )
                 return 0;
         }
         if ( ctx->follow_pid ) {
-                WARN("Not available on follow pid mode!");
+                ui_show_message(LOCATION_BANNER,"Endpoint view not available on follow pid -mode");
                 return -1;
         }
 

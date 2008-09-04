@@ -3,6 +3,10 @@
  * @brief Common header for UI functions.
  *
  * This header contains the type definitions and such necessary for the UI API.
+ * The functions defined on this file should be the ones used by the modules
+ * outside ui/ -directory.
+ *
+ * Hence, in theory, the UI can be ported more easily.
  *
  *  Copyright (c) 2005-2008, J. Taimisto
  * All rights reserved.
@@ -36,9 +40,22 @@
 #ifndef _UI_H_
 #define _UI_H_
 
+/** 
+ * This enum defines the places where messages can be 
+ * printed using the ui_show_message() function.
+ *
+ * @see ui_show_message()
+ */
+enum message_location {
+        LOCATION_BANNER, /**< Print the message into upper banner area */
+        LOCATION_STATUSBAR /**< Print the message to the bottom of the screen */
+};
+
 int ui_init( struct stat_context *ctx );
 void ui_deinit( void );
 void ui_update_view( struct stat_context *ctx );
 void ui_input_loop( struct stat_context *ctx );
+void ui_show_message( enum message_location, char *message);
+void ui_clear_message( enum message_location );
 
 #endif /* _UI_H_ */

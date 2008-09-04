@@ -49,12 +49,8 @@
 #include "defs.h"
 #include "debug.h"
 #include "connection.h" 
-
-#ifdef ENABLE_RESOLVE_POPUP
-extern void resolve_popup( const char *addrstr);
-void resolve_done_popup();
-#endif /* ENABLE_RESOLVE_POPUP */
-
+#include "stat.h"
+#include "ui.h" /* print "resolving" banner */
 
 
 /**
@@ -700,6 +696,20 @@ static void resolve_servname( uint16_t port, struct conn_metadata *meta_p )
 }
 
 /**
+ * Print a message to user that we are resolving an address.
+ *
+ * @param addr Pointer to string containing the address we are resolving.
+ */
+static void print_resolving( char *addr )
+{
+        char msg[80];
+
+        snprintf(msg,80, "Resolving %s", addr );
+        ui_show_message( LOCATION_STATUSBAR, msg );
+
+}
+
+/**
  * Resolve the remote hostname for connection. The resolved hostname is copied
  * to metadata information. The connection is also flagged as resolved and new
  * calls to this function will not redo the host resolution.
@@ -781,13 +791,10 @@ int connection_resolve( struct tcp_connection *conn_p )
                                 return 0;
 		}
         }
-#ifdef ENABLE_RESOLVE_POPUP
-        resolve_popup( conn_p->metadata.raddr_string );
-#endif /* ENABLE_RESOLVE_POPUP */
+
+        print_resolving( conn_p->metadata.raddr_string );
         hent_p = gethostbyaddr( addr_p, len, family );
-#ifdef ENABLE_RESOLVE_POPUP
-        resolve_done_popup( );
-#endif /* ENABLE_RESOLVE_POPUP */
+        ui_clear_message( LOCATION_STATUSBAR );
         if ( hent_p == NULL ) {
                 DBG( "gethostbyaddr() returned NULL, address was %s \n", conn_p->metadata.raddr_string );
                 meta_p->rem_hostname[0] = '\0';

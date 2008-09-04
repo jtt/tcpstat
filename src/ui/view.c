@@ -50,13 +50,25 @@
 #include "pidscout.h"
 #include "stat.h"
 #include "printout_curses.h"
+#include "ui.h"
 
+#define BANNER_MESSAGE_MAX 200
+
+/**
+ * This will contain the message which is show after standard banners.
+ */
+static char banner_message[BANNER_MESSAGE_MAX];
+
+/**
+ * @defgroup uiapi API for using the user interface. 
+ */
 
 /** 
  * @brief Initialize the UI.
  *
  * This function is used to initialize the user interface.
  * 
+ * @ingroup uiapi
  * @param ctx Pointer to the main context.
  * 
  * @return 0 on success, -1 on error.
@@ -72,6 +84,7 @@ int ui_init( struct stat_context *ctx )
 
 /** 
  * @brief Deinitialize the UI
+ * @ingroup uiapi
  *
  * Deinitializes the UI and frees any resources allocated.
  */
@@ -89,6 +102,7 @@ void ui_deinit( void )
  * The "default" banners are printed before the view -specific update is
  * called.
  * 
+ * @ingroup uiapi
  * @param ctx Pointer to the main context.
  * 
  */
@@ -100,6 +114,12 @@ void ui_update_view( struct stat_context *ctx )
 #ifdef DEBUG
         gui_print_dbg_banner( ctx );
 #endif /* DEBUG */
+        if ( banner_message[0] != '\0' ) {
+                add_to_linebuf(banner_message);
+                write_linebuf_partial_attr( A_BOLD );
+                write_linebuf();
+                banner_message[0] = '\0';
+        }
 
         switch( gui_get_current_view() ) {
                 case MAIN_VIEW :
@@ -130,6 +150,7 @@ extern void do_exit( struct stat_context *ctx, char *exit_msg );
  * command of currently active view is called.
  *
  * @bug In case user presses other than command key, the wait time might be too small.
+ * @ingroup uiapi
  *
  * @param ctx Pointer to the global context.
  */
@@ -197,5 +218,66 @@ void ui_input_loop( struct stat_context *ctx )
         }
 }
 
+/** 
+ * @brief Display a message to user. 
+ *
+ * Message can be displayed at different positions. If @a loc parameter is
+ * LOCATION_STATUSBAR, the message is displayed at the bottom of the screen,
+ * and the message is displayed immediately and will be shown untill next
+ * update. If it is LOCATION_BANNER, the message is shown after the standard
+ * banners, the message will be sshown when the next update is done and is
+ * removed after that. 
+ *
+ * ui_clear_message() can be used to explicitly clear message, with
+ * LOCATION_STATUSBAR, the displayed message is removed immediately and with
+ * LOCATION_BANNER, the displaying of the message is cancelled for the nexct
+ * update (note that banner messages are only shown for one update duration and
+ * removed after that).
+ *
+ * @ingroup uiapi
+ * @see ui_clear_message()
+ * 
+ * @param loc Location where the message is to be displayed.
+ * @param message The message to display.
+ */
+void ui_show_message( enum message_location loc, char *message)
+{
+        switch( loc ) {
+                case LOCATION_STATUSBAR :
+                        gui_print_statusbar(message);
+                        break;
+                case LOCATION_BANNER :
+                        strncpy(banner_message, message, BANNER_MESSAGE_MAX );
+                        banner_message[BANNER_MESSAGE_MAX-1] = '\0';
+                        break;
+                default :
+                        break;
+        }
+}
 
-
+/** 
+ * @brief Clear the message from being shown.
+ *
+ * If @a loc is LOCATION_STATUSBAR, the message is removed immediately and the
+ * screen is refressed, LOCATION_BANNER messages are removed and won't be shown
+ * on next update round.
+ *
+ * @ingroup uiapi
+ *
+ * @see ui_show_message()
+ * 
+ * @param loc Location to clear.
+ */
+void ui_clear_message( enum message_location loc)
+{
+        switch( loc ) {
+                case LOCATION_STATUSBAR :
+                        gui_clear_statusbar();
+                        break;
+                case LOCATION_BANNER :
+                        banner_message[0] = '\0';
+                        break;
+                default :
+                        break;
+        }
+}
