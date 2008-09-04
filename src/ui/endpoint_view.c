@@ -181,12 +181,6 @@ int endpoint_update( struct stat_context *ctx )
 {
         struct group *grp;
 
-        gui_print_banner( ctx );
-        if ( ctx->do_ifstats )
-                gui_print_if_banners( ctx );
-#ifdef DEBUG
-        gui_print_dbg_banner( ctx );
-#endif /* DEBUG */
         attron( A_REVERSE );
         add_to_linebuf("\t\tOutgoing connection endpoint(s): ");
         write_linebuf();

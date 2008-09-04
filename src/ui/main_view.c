@@ -497,12 +497,6 @@ static void do_print_stat_pids( struct stat_context *ctx )
 {
         struct pidinfo *info_p;
 
-        gui_print_banner( ctx );
-        if ( ctx->do_ifstats )
-                gui_print_if_banners( ctx );
-#ifdef DEBUG
-        gui_print_dbg_banner( ctx );
-#endif /* DEBUG */
         info_p = ctx->pinfo;
         while ( info_p != NULL ) {
                 if ( group_get_size( info_p->grp ) > 0 ) {
@@ -523,12 +517,6 @@ static void do_print_stat( struct stat_context *ctx )
 {
         struct group *grp;
 
-        gui_print_banner( ctx );
-        if ( ctx->do_ifstats ) 
-                gui_print_if_banners( ctx );
-#ifdef DEBUG
-        gui_print_dbg_banner( ctx );
-#endif /* DEBUG */
         gui_print_in_banner( ctx );
 
         grp = glist_get_head( ctx->listen_groups );

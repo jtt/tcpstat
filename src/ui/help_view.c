@@ -134,10 +134,6 @@ static void print_generic_help()
 int help_update( struct stat_context *ctx )
 {
 
-        gui_print_banner( ctx );
-        if ( ctx->do_ifstats )
-                gui_print_if_banners( ctx );
-
         attron( A_REVERSE );
         add_to_linebuf("\t\tAvailable commands: ");
         write_linebuf();

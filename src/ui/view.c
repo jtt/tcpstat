@@ -85,12 +85,22 @@ void ui_deinit( void )
  *
  * The information is printed to the user according to the currently active
  * view.
+ *
+ * The "default" banners are printed before the view -specific update is
+ * called.
  * 
  * @param ctx Pointer to the main context.
  * 
  */
 void ui_update_view( struct stat_context *ctx )
 {
+        gui_print_banner( ctx );
+        if ( ctx->do_ifstats )
+                gui_print_if_banners( ctx );
+#ifdef DEBUG
+        gui_print_dbg_banner( ctx );
+#endif /* DEBUG */
+
         switch( gui_get_current_view() ) {
                 case MAIN_VIEW :
                         main_update( ctx );
