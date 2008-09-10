@@ -320,10 +320,10 @@ static void print_titlebar()
 {
         const char *fmt = format_string_for_addr();
 
-        add_to_linebuf( " %4s   ","INF");
+        add_to_linebuf( " %4s   ","Inf");
         add_to_linebuf( fmt,"Local address");
         add_to_linebuf( " %5s", "Port" );
-        add_to_linebuf( " %3s ", "DIR" );
+        add_to_linebuf( " %3s ", "Dir" );
         add_to_linebuf( fmt, "Remote address");
         add_to_linebuf( " %5s", "Port" );
         if ( gui_do_routing() ) {
