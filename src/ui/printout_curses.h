@@ -97,7 +97,8 @@ int help_update( struct stat_context *ctx );
 
 /* Start using "wide" formating after this limit of columns is in use */
 #define GUI_COLUMN_WIDE_LIMIT 110
-#define GUI_COLUMN_WIDEST_LIMIT 130
+#define GUI_COLUMN_WIDEST_LIMIT 150
+#define GUI_COLUMN_RT_WIDE_LIMIT 130
 
 
 

@@ -249,23 +249,23 @@ static void print_connection_addrs( struct tcp_connection *conn_p )
 static void print_rt_info( struct tcp_connection *conn_p )
 {
         if ( conn_p->metadata.route == NULL ) {
-                if ( gui_get_columns() < GUI_COLUMN_WIDEST_LIMIT ) 
+                if ( gui_get_columns() < GUI_COLUMN_RT_WIDE_LIMIT ) 
                         add_to_linebuf( via_narrow_format, "-" );
                 else
                         add_to_linebuf( via_wide_format, "-" );
 
                 return;
         }
-        if ( gui_get_columns() < GUI_COLUMN_WIDEST_LIMIT ) {
+        if ( gui_get_columns() < GUI_COLUMN_RT_WIDE_LIMIT ) {
                 if ( rtinfo_is_on_local_net( conn_p->metadata.route ) ) 
                         add_to_linebuf( via_narrow_format, "on net" );
                 else 
                         add_to_linebuf( via_narrow_format, "via gw" );
         } else {
                 if ( rtinfo_is_on_local_net( conn_p->metadata.route ) ) 
-                        add_to_linebuf( via_narrow_format, "on local net" );
+                        add_to_linebuf( via_wide_format, "on local net" );
                 else  
-                        add_to_linebuf( via_narrow_format, conn_p->metadata.route->addr_str );
+                        add_to_linebuf( via_wide_format, conn_p->metadata.route->addr_str );
         }
 }
 
@@ -328,7 +328,7 @@ static void print_titlebar()
         add_to_linebuf( " %5s", "Port" );
         if ( gui_do_routing() ) {
                 /* XXX : we really should not use numbers here */
-                if ( gui_get_columns() < GUI_COLUMN_WIDEST_LIMIT )
+                if ( gui_get_columns() < GUI_COLUMN_RT_WIDE_LIMIT )
                         add_to_linebuf( via_narrow_format, "Route");
                 else 
                         add_to_linebuf( via_wide_format, "Route");
