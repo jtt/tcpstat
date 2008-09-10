@@ -152,6 +152,31 @@ static const char port_format[] = ":%-5hu";
 static const char servname_format[] = ":%-5.10s";
 
 /** 
+ * @brief Get the format string which is used to print the connection address information
+ * 
+ * @return Format string.
+ */
+static const char *format_string_for_addr()
+{
+        int cols;
+        const char *fmt;
+
+        cols = gui_get_columns();
+
+        if ( cols < GUI_COLUMN_WIDE_LIMIT ) {
+                fmt = conn_format_narrow;
+        } else if ( cols < GUI_COLUMN_WIDEST_LIMIT ) {
+                fmt = conn_format_wide;
+        } else if ( cols >= GUI_COLUMN_WIDEST_LIMIT ) {
+               fmt = conn_format_widest;
+        } 
+        return fmt;
+}
+
+
+
+
+/** 
  * @brief Print addresses of the connection on human readable form.
  *
  * The source and destination addresses of the connection are printed on either
@@ -170,20 +195,11 @@ static const char servname_format[] = ":%-5.10s";
 static void print_connection_addrs( struct tcp_connection *conn_p )
 {
         const char *fmt;
-        int cols;
 
         if ( gui_resolve_names() && ( ! ( conn_p->metadata.flags & METADATA_RESOLVED)) ) {
                 connection_resolve( conn_p );
         }
-        cols = gui_get_columns();
-
-        if ( cols < GUI_COLUMN_WIDE_LIMIT ) {
-                fmt = conn_format_narrow;
-        } else if ( cols < GUI_COLUMN_WIDEST_LIMIT ) {
-                fmt = conn_format_wide;
-        } else if ( cols >= GUI_COLUMN_WIDEST_LIMIT ) {
-               fmt = conn_format_widest;
-        } 
+        fmt = format_string_for_addr();
 
         /* Local address, is not resolved */
         add_to_linebuf( fmt, conn_p->metadata.laddr_string );
@@ -272,6 +288,25 @@ static void gui_print_connection( struct tcp_connection *conn_p )
 
 
 }
+
+static void print_titlebar()
+{
+        const char *fmt = format_string_for_addr();
+
+        add_to_linebuf( " %4s   ","INF");
+        add_to_linebuf( fmt,"Local address");
+        add_to_linebuf( " %5s", "Port" );
+        add_to_linebuf( " %3s ", "DIR" );
+        add_to_linebuf( fmt, "Remote address");
+        add_to_linebuf( " %5s", "Port" );
+        add_to_linebuf( " %-12s", "State" );
+        add_to_linebuf( " %-9s", "Time" );
+
+        write_linebuf_partial_attr( A_REVERSE );
+        write_linebuf();
+}
+
+
 
 
 /** 
@@ -525,6 +560,7 @@ static void do_print_stat( struct stat_context *ctx )
                 grp = grp->next;
         }
         gui_print_out_banner( ctx );
+        print_titlebar();
         grp = glist_get_head( ctx->out_groups );
         while ( grp != NULL ) {
                 gui_print_group( grp,1,1 );
@@ -545,6 +581,7 @@ static void do_print_stat( struct stat_context *ctx )
  */
 int main_update( struct stat_context *ctx )
 {
+
         if ( ctx->follow_pid )
                 do_print_stat_pids( ctx );
         else
