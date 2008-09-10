@@ -316,6 +316,9 @@ static void gui_print_connection( struct tcp_connection *conn_p )
 
 }
 
+/**
+ * Print the titlebar containing the column information for the printed connections
+ */
 static void print_titlebar()
 {
         const char *fmt = format_string_for_addr();
@@ -518,6 +521,10 @@ void main_print_help()
         add_to_linebuf(" L  ");
         write_linebuf_partial_attr( A_BOLD);
         add_to_linebuf(" Toggle lingering of closed connections");
+        write_linebuf();
+        add_to_linebuf(" R  ");
+        write_linebuf_partial_attr( A_BOLD);
+        add_to_linebuf(" Toggle displaying of routing information");
         write_linebuf();
         write_linebuf();
         add_to_linebuf("  Commands for switching grouping of outgoing connections");
