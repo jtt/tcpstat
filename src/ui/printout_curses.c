@@ -141,6 +141,12 @@ int gui_do_routing()
         return gui_ctx.do_routing;
 }
 
+int gui_toggle_routing() 
+{
+        gui_ctx.do_routing = ! gui_ctx.do_routing;
+        return gui_ctx.do_routing;
+}
+
 /**
  * Print message (or no message, clear the statusbar) to the statusbar.
  *

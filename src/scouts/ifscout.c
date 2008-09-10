@@ -286,6 +286,34 @@ const char *ifname_for_addr( struct ifinfo_tab *tab_p, struct sockaddr_storage *
 }
 
 /** 
+ * @brief Check if (some of) the interfaces on the tab have routing information
+ * present.
+ *
+ * The routing infromation is not necessarily gathered for the interfaces, this
+ * function can be used to check if at least some of the interfaces have some
+ * routing information (pretty vague, yeah) present.
+ * 
+ * @param tab_p Pointer to the structure containing the interface information.
+ * 
+ * @return 1 if some routing information is found, 0 if not.
+ */
+int iftab_has_routes( struct ifinfo_tab *tab_p ) 
+{
+        int i;
+        int rv = 0;
+
+        for ( i = 0; i < tab_p->size; i++ ) {
+                if ( tab_p->ifs[i].routes != NULL ) {
+                        rv = 1;
+                        break;
+                }
+        }
+
+        return rv;
+}
+
+
+/** 
  * @brief Get ifinfo structure for device with given name. 
  *
  * @ingroup ifscout_api

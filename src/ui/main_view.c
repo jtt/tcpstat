@@ -488,6 +488,15 @@ int main_input( struct stat_context *ctx, int key )
                         if ( gui_get_current_view() == MAIN_VIEW )
                                 switch_grouping( ctx, POLICY_STATE );
                         break;
+                case 'R' :
+                        TRACE("Toggling routing");
+                        if ( ! iftab_has_routes( ctx->iftab ) ) {
+                                DBG("No routes, scouting\n");
+                                parse_routing_info( ctx->iftab );
+                        }
+
+                        ctx->do_routing = gui_toggle_routing();
+                        break;
                 default :
                         WARN( "Unkown key pressed %c (%d), ignoring\n",(char)key,key );
                         rv = 0;

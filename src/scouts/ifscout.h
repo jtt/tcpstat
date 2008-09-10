@@ -105,4 +105,5 @@ const char *ifname_for_addr( struct ifinfo_tab *tab_p, struct sockaddr_storage *
 void deinit_ifinfo_tab( struct ifinfo_tab *tab_p );
 struct ifinfo *get_ifinfo_by_name( struct ifinfo_tab *tab, const char *name );
 void read_interface_stat( struct stat_context *ctx );
+int iftab_has_routes( struct ifinfo_tab *tab_p ); 
 #endif /* _IFSCOUT_H_ */

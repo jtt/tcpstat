@@ -57,6 +57,7 @@ int gui_toggle_ifdiffs();
 int gui_resolve_names();
 int gui_toggle_resolve();
 int gui_do_routing();
+int gui_toggle_routing();
 int gui_get_columns();
 enum gui_view gui_get_current_view();
 void gui_set_current_view( enum gui_view view );
