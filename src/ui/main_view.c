@@ -150,7 +150,7 @@ static const char conn_format_narrow[] = "%15.15s";
 static const char conn_format_narrow_rt[] = "%11.11s";
 
 static const char port_format[] = ":%-5hu";
-static const char servname_format[] = ":%-5.10s";
+static const char servname_format[] = ":%-5.5s";
 
 static const char via_narrow_format[] = " %6.6s";
 static const char via_wide_format[] = " %19.19s";
