@@ -147,9 +147,13 @@ static const char conn_format_wide[] = "%30.30s";
  * terminal.
  */
 static const char conn_format_narrow[] = "%15.15s";
+static const char conn_format_narrow_rt[] = "%11.11s";
 
 static const char port_format[] = ":%-5hu";
 static const char servname_format[] = ":%-5.10s";
+
+static const char via_narrow_format[] = " %6.6s";
+static const char via_wide_format[] = " %19.19s";
 
 /** 
  * @brief Get the format string which is used to print the connection address information
@@ -164,7 +168,10 @@ static const char *format_string_for_addr()
         cols = gui_get_columns();
 
         if ( cols < GUI_COLUMN_WIDE_LIMIT ) {
-                fmt = conn_format_narrow;
+                if ( gui_do_routing() )
+                        fmt = conn_format_narrow_rt;
+                else 
+                        fmt = conn_format_narrow;
         } else if ( cols < GUI_COLUMN_WIDEST_LIMIT ) {
                 fmt = conn_format_wide;
         } else if ( cols >= GUI_COLUMN_WIDEST_LIMIT ) {
@@ -233,6 +240,35 @@ static void print_connection_addrs( struct tcp_connection *conn_p )
         }
 }
 
+/** 
+ * @brief Print the routing information of connection to the screen
+ * 
+ * @param conn_p pointer to connection whose routing information should be
+ * printed.
+ */
+static void print_rt_info( struct tcp_connection *conn_p )
+{
+        if ( conn_p->metadata.route == NULL ) {
+                if ( gui_get_columns() < GUI_COLUMN_WIDEST_LIMIT ) 
+                        add_to_linebuf( via_narrow_format, "-" );
+                else
+                        add_to_linebuf( via_wide_format, "-" );
+
+                return;
+        }
+        if ( gui_get_columns() < GUI_COLUMN_WIDEST_LIMIT ) {
+                if ( rtinfo_is_on_local_net( conn_p->metadata.route ) ) 
+                        add_to_linebuf( via_narrow_format, "on net" );
+                else 
+                        add_to_linebuf( via_narrow_format, "via gw" );
+        } else {
+                if ( rtinfo_is_on_local_net( conn_p->metadata.route ) ) 
+                        add_to_linebuf( via_narrow_format, "on local net" );
+                else  
+                        add_to_linebuf( via_narrow_format, conn_p->metadata.route->addr_str );
+        }
+}
+
 
 
 /**
@@ -263,17 +299,8 @@ static void gui_print_connection( struct tcp_connection *conn_p )
         add_to_linebuf( "%c %4s   ",update_symbol, 
                         conn_p->metadata.ifname?conn_p->metadata.ifname:"N/A");
         print_connection_addrs( conn_p );
-        if ( gui_do_routing() && gui_get_columns() >= GUI_COLUMN_WIDEST_LIMIT  ) {
-                if ( conn_p->metadata.route != NULL ) {
-                        if ( rtinfo_is_on_local_net( conn_p->metadata.route )) {
-                                add_to_linebuf( "%20.20s", "on local net");
-                        } else { 
-                                add_to_linebuf( " via %15.15s", conn_p->metadata.route->addr_str);
-                        }
-                } else {
-                        add_to_linebuf(" via %15.15s","-" );
-                }
-        }
+        if ( gui_do_routing() )
+                print_rt_info( conn_p );
 
         write_linebuf_partial();
         add_to_linebuf( " %-12s", conn_state_to_str( conn_p->state ));
@@ -299,6 +326,13 @@ static void print_titlebar()
         add_to_linebuf( " %3s ", "DIR" );
         add_to_linebuf( fmt, "Remote address");
         add_to_linebuf( " %5s", "Port" );
+        if ( gui_do_routing() ) {
+                /* XXX : we really should not use numbers here */
+                if ( gui_get_columns() < GUI_COLUMN_WIDEST_LIMIT )
+                        add_to_linebuf( via_narrow_format, "Route");
+                else 
+                        add_to_linebuf( via_wide_format, "Route");
+        }
         add_to_linebuf( " %-12s", "State" );
         add_to_linebuf( " %-9s", "Time" );
 
