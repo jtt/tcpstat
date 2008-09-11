@@ -154,6 +154,7 @@ static const char servname_format[] = ":%-5.5s";
 
 static const char via_narrow_format[] = " %6.6s";
 static const char via_wide_format[] = " %19.19s";
+static const char via_wide_format_a[] = " via %15.15s";
 
 /** 
  * @brief Get the format string which is used to print the connection address information
@@ -265,7 +266,7 @@ static void print_rt_info( struct tcp_connection *conn_p )
                 if ( rtinfo_is_on_local_net( conn_p->metadata.route ) ) 
                         add_to_linebuf( via_wide_format, "on local net" );
                 else  
-                        add_to_linebuf( via_wide_format, conn_p->metadata.route->addr_str );
+                        add_to_linebuf( via_wide_format_a, conn_p->metadata.route->addr_str );
         }
 }
 
