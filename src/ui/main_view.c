@@ -494,12 +494,7 @@ int main_input( struct stat_context *ctx, int key )
                         break;
                 case 'R' :
                         TRACE("Toggling routing");
-                        if ( ! iftab_has_routes( ctx->iftab ) ) {
-                                DBG("No routes, scouting\n");
-                                parse_routing_info( ctx->iftab );
-                        }
-
-                        ctx->do_routing = gui_toggle_routing();
+                        gui_toggle_routing();
                         break;
                 default :
                         WARN( "Unkown key pressed %c (%d), ignoring\n",(char)key,key );

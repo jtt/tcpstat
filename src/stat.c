@@ -60,6 +60,39 @@
 /*#define LINELEN 160 */
 
 /** 
+ * @brief Resolve the appropriate route for given connection.
+ *
+ * The resolved route is put to the metadata on the connection, note that the
+ * routes should have been scanned before this function is called.
+ *
+ * No route will be resolved for connections on state TCP_LISTEN
+ * 
+ * @param ctx Pointer to the global context
+ * @param conn_p  Pointer to the connection whose routing information should be printed.
+ * 
+ */
+void resolve_route_for_connection( struct stat_context *ctx,
+                struct tcp_connection *conn_p)
+{
+        struct ifinfo *iinfo_p;
+
+        if ( conn_p->state == TCP_LISTEN )
+                return;
+
+        iinfo_p = get_ifinfo_by_name( ctx->iftab,
+                        conn_p->metadata.ifname );
+        if ( iinfo_p != NULL ) { 
+                if ( iinfo_p->routes == NULL ) {
+                        WARN("No routes for interface %s \n", iinfo_p->ifname );
+                } else {
+                        conn_p->metadata.route = rtlist_find_info(
+                                        iinfo_p->routes, conn_p );
+                }
+        }
+        return;
+}
+
+/** 
  * @brief Add new connection to system.
  * Metadata information is filled and the new connection is added to the
  * hashtable. If the connection is not in LISTEN state, it is also added to the
@@ -84,20 +117,7 @@ static void insert_new_connection( struct tcp_connection *conn_p,
         metadata_set_flag( conn_p->metadata, METADATA_NEW );
         conn_p->metadata.inode = inode;
         conn_p->metadata.ifname = ifname_for_addr( ctx->iftab, &(conn_p->laddr) );
-        if ( ctx->do_routing && conn_p->state != TCP_LISTEN ) {
-                struct ifinfo *iinfo_p;
-
-                iinfo_p = get_ifinfo_by_name( ctx->iftab,
-                                conn_p->metadata.ifname );
-                if ( iinfo_p != NULL ) { 
-			if ( iinfo_p->routes == NULL ) {
-				WARN("No routes for interface %s \n", iinfo_p->ifname );
-			} else {
-                        conn_p->metadata.route = rtlist_find_info(
-                                        iinfo_p->routes, conn_p );
-			}
-		}
-        }
+        resolve_route_for_connection( ctx, conn_p );
 
         connection_do_addrstrings( conn_p );
 

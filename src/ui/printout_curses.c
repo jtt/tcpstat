@@ -367,7 +367,7 @@ int gui_init( struct stat_context *ctx )
         reset_ctx();
         gui_ctx.do_resolve = ctx->do_resolve;
         gui_ctx.ifstat_diffs = 0;
-        gui_ctx.do_routing = ctx->do_routing;
+        gui_ctx.do_routing = 0;
         gui_ctx.view = MAIN_VIEW;
 
         return 0;

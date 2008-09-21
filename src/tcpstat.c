@@ -147,7 +147,6 @@ static void print_help( char *name  )
         printf( "\t--pid <pid> or -p <pid> : Show only connection for process\n\t  with pid <pid>\n" );
         printf( "\t--delay <sec> or -d <sec> : Set delay betveen updates to \n\t  <sec> seconds. Default is %d sec\n",DEFAULT_UPDATE_INT );
         printf( "\t--numeric or -n : Don't resolve hostnames\n" );
-        printf( "\t--route or -r   : Display also roting info (used gw address) for \n\t   the connection\n");
         printf( "\t--listen or -l  : Print information about listening connections\n" );
         printf( "\t--linger or -L  : Linger closed connections for a while\n" );
         printf( "\t--ifstat or -i  : Collect and display interface statistics\n");
@@ -316,7 +315,6 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                { "ifstats",0,0,'i'},
                { "ipv4", 0,0, '4'},
                { "ipv6", 0,0, '6'},
-               { "route", 0,0, 'r'},
 #ifdef DEBUG
                { "debug",1,0,'D'},
 #endif /* DEBUG */    
@@ -346,9 +344,6 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                              break;
                       case 'i' :
                              ctx->do_ifstats = 1;
-                             break;
-                      case 'r' :
-                             ctx->do_routing = 1;
                              break;
                       case '4' :
                              ctx->collected_stats = STAT_V4_ONLY;
@@ -419,7 +414,7 @@ int main( int argc, char *argv[] )
 #if 0
         DBG_MODULE_LEVEL( DBG_MODULE_FILTER, DBG_L_TRACE );
         DBG_MODULE_LEVEL( DBG_MODULE_RT, DBG_L_TRACE );
-#endif
+#endif 
 
         ctx = mem_alloc( sizeof( struct stat_context) );
         memset( ctx,0, sizeof( *ctx));
@@ -437,7 +432,6 @@ int main( int argc, char *argv[] )
         ctx->display_listen = 0;
         ctx->do_linger = 0;
         ctx->do_ifstats = 0;
-        ctx->do_routing = 0;
         ctx->collected_stats = STAT_ALL;
 
         strncpy( progname, argv[0], PROGNAMELEN );
@@ -452,10 +446,8 @@ int main( int argc, char *argv[] )
         }
         DBG( "Scouted %d interfaces\n", ctx->iftab->size );
 
-        if ( ctx->do_routing ) {
-                DBG("Adding routing info\n");
-                parse_routing_info(ctx->iftab);
-        }
+        DBG("Adding routing info\n");
+        parse_routing_info(ctx->iftab);
 
 
         ui_init( ctx );

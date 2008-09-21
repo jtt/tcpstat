@@ -49,7 +49,6 @@ struct stat_context {
         int do_resolve; /**< Resolve hostnames */
         int do_linger; /**< Linger closed connections */
         int do_ifstats; /**< Collect interface statistics */
-        int do_routing;/**< Show routing information */
         int display_listen; /**< display listen groups */
         int update_interval;/**< nr of secods between updates */
         int collected_stats; /**< what stats to collect */ 
@@ -71,6 +70,7 @@ int purge_closed_connections( struct stat_context *ctx, int closed_cnt );
 int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_storage *remote_addr,
                 enum tcp_state state, ino_t inode, struct stat_context *ctx );
 void clear_metadata_flags( struct glist *list );
+void resolve_route_for_connection( struct stat_context *ctx, struct tcp_connection *conn_p);
 
 
 
