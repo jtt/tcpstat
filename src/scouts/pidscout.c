@@ -175,7 +175,7 @@ int scout_pid( struct pidinfo *info_p )
                 if ( ! ( filestat.st_mode & S_IFLNK ) )  {
                         goto next;
                 }
-                link_len = readlink( base_path, linkname, MAX_PATH_LEN );
+                link_len = readlink( base_path, linkname, MAX_PATH_LEN-1 );
                 if ( link_len == -1 ) {
                         WARN( "readlink() failed for %s \n", base_path );
                         goto next;
