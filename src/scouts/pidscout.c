@@ -280,7 +280,7 @@ void scan_cmdline( struct pidinfo *info_p )
                 return;
         }
         close( fd );
-        info_p->progname[PROGNAME_MAX] = '\0';
+        info_p->progname[PROGNAME_MAX-1] = '\0';
         DBG ( "Commandline for process %d:%s\n", info_p->pid, info_p->progname );
         return;
 }
