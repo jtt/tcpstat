@@ -240,6 +240,33 @@ int group_get_size( struct group *group_p )
         }
 }
 
+/**
+ * @brief Get the number of new connections on the group
+ *
+ * @ingroup cgrp
+ * @param group_p Pointer to the group
+ * @return Number of new connections on the group.
+ */
+int group_get_newcount( struct group *group_p ) {
+        
+        struct tcp_connection *conn_p;
+        int count = 0;
+
+        if ( group_get_size( group_p ) == 0 )
+                return 0;
+
+        conn_p = group_get_first_conn( group_p );
+        while ( conn_p != 0 ) {
+                if ( metadata_is_new( conn_p->metadata ) )
+                        count++;
+                conn_p = conn_p->next;
+        }
+
+        return count;
+}
+
+
+
 /** 
  * @brief Get pointer to the groups internal queue.
  * 

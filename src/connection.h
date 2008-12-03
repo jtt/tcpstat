@@ -292,6 +292,7 @@ struct tcp_connection *group_get_parent( struct group *group_p );
 void group_set_parent( struct group *group_p, struct tcp_connection *conn_p );
 uint16_t group_get_policy( struct group *group_p ); 
 struct cqueue *group_get_queue( struct group *group_p );
+int group_get_newcount( struct group *group_p );
 
 #ifdef DEBUG 
 void dump_group( struct group *grp );

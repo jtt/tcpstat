@@ -133,6 +133,7 @@ void deinit_endpoint_view( struct stat_context *ctx )
 static void do_group( struct group *grp )
 {
         struct tcp_connection *conn_p;
+        int new_count = 0;
 
 
         conn_p = group_get_first_conn( grp );
@@ -155,6 +156,9 @@ static void do_group( struct group *grp )
         }
 
         add_to_linebuf(" %d connections", group_get_size( grp ) );
+        new_count = group_get_newcount( grp );
+        if ( new_count )
+                add_to_linebuf(" / %d new", new_count );
 
         write_linebuf();
 
