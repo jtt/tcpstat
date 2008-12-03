@@ -857,7 +857,7 @@ uint16_t connection_get_port( struct tcp_connection *conn, int local )
 
 
 
-
+#define ANY_ADDRSTR "*"
 
 /** 
  * @brief Generate cacheable address strings for connection address. 
@@ -880,12 +880,17 @@ int connection_do_addrstrings( struct tcp_connection *conn_p )
         if ( conn_p->laddr.ss_family == AF_INET ) {
                 struct sockaddr_in *addr_p = (struct sockaddr_in *)&conn_p->laddr;
 
-                if ( inet_ntop( addr_p->sin_family, 
-                                &addr_p->sin_addr, 
-                                meta_p->laddr_string,
-                                ADDRSTR_BUFLEN ) == NULL ) {
-                        WARN( "inet_ntop() failed, bailing out! \n" );
-                        return -1;
+                if ( addr_p->sin_addr.s_addr == INADDR_ANY ) {
+                        strncpy( meta_p->laddr_string, ANY_ADDRSTR, ADDRSTR_BUFLEN );
+                } else {
+
+                        if ( inet_ntop( addr_p->sin_family, 
+                                                &addr_p->sin_addr, 
+                                                meta_p->laddr_string,
+                                                ADDRSTR_BUFLEN ) == NULL ) {
+                                WARN( "inet_ntop() failed, bailing out! \n" );
+                                return -1;
+                        }
                 }
                 addr_p = (struct sockaddr_in *)&conn_p->raddr;
 
@@ -900,13 +905,18 @@ int connection_do_addrstrings( struct tcp_connection *conn_p )
         } else {
                 struct sockaddr_in6 *addr_p = (struct sockaddr_in6 *)&conn_p->laddr;
 
-                if ( inet_ntop( addr_p->sin6_family,
-                                &addr_p->sin6_addr, 
-                                meta_p->laddr_string,
-                                ADDRSTR_BUFLEN ) == NULL ) {
+                if ( IN6_IS_ADDR_UNSPECIFIED( addr_p->sin6_addr.s6_addr) ) {
+                        strncpy( meta_p->laddr_string, ANY_ADDRSTR, ADDRSTR_BUFLEN );
+                } else {
 
-                        WARN( "inet_ntop() failed, bailing out! \n" );
-                        return -1;
+                        if ( inet_ntop( addr_p->sin6_family,
+                                                &addr_p->sin6_addr, 
+                                                meta_p->laddr_string,
+                                                ADDRSTR_BUFLEN ) == NULL ) {
+
+                                WARN( "inet_ntop() failed, bailing out! \n" );
+                                return -1;
+                        }
                 }
                 addr_p = (struct sockaddr_in6 *)&conn_p->raddr;
 
