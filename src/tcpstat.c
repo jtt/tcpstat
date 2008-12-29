@@ -152,6 +152,8 @@ static void print_help( char *name  )
         printf( "\t--ifstat or -i  : Collect and display interface statistics\n");
         printf( "\t--ipv4 or -4    : Collect only IPv4 TCP connection statistics\n" ); 
         printf( "\t--ipv6 or -6    : Collect only IPv6 TCP connection statistics\n" ); 
+        printf( "\tFiltering options : \n");
+        printf( "\t--ignore-rport <port>[,<port>,<port>] : Ignore connections with given remote port(s)\n" );
 #ifdef DEBUG
         printf( "\t--debug <lvl> or -D <lvl> : Set debug level (0,1,2,3)\n" );
 #endif /* DEBUG */
