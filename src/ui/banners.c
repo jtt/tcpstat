@@ -93,6 +93,17 @@ void gui_print_dbg_banner( struct stat_context *ctx )
 }
 
 #endif /* DEBUG */
+
+
+static void write_statnum( int num, char *text )
+{
+        add_to_linebuf( " %d", num );
+        write_linebuf_partial_attr( A_BOLD );
+        add_to_linebuf( "%s", text );
+        write_linebuf_partial();
+}
+
+
 /** 
  * @brief Print the "main" banner.
  * @ingroup gui_c
@@ -184,39 +195,19 @@ void gui_print_banner( struct stat_context *ctx )
 
         add_to_linebuf( "Connections:");
         write_linebuf_partial();
-        add_to_linebuf( " %d", ctx->total_count );
-        write_linebuf_partial_attr( A_BOLD );
-        add_to_linebuf( " total," );
-        write_linebuf_partial();
-
-        add_to_linebuf( " %d", ctx->new_count );
-        write_linebuf_partial_attr( A_BOLD );
-        add_to_linebuf( " new," );
-        write_linebuf_partial();
+        write_statnum( ctx->total_count, " total,");
+        write_statnum( ctx->new_count, " new,");
 
         if ( !ctx->follow_pid ) {
                 /* we do not know the direction of connections on
                  * "follow pid" mode. 
                  */
-                add_to_linebuf( " %d", glist_connection_count( ctx->out_groups ));
-                write_linebuf_partial_attr( A_BOLD );
-                add_to_linebuf( " outgoing," );
-                write_linebuf_partial();
-
-                add_to_linebuf( " %d", glist_connection_count( ctx->listen_groups ));
-                write_linebuf_partial_attr( A_BOLD );
-                add_to_linebuf( " incoming," );
-                write_linebuf_partial();
+                write_statnum( glist_connection_count(ctx->out_groups), " outgoing,");
+                write_statnum( glist_connection_count(ctx->listen_groups), " incoming,");
         }
 
-        add_to_linebuf( " %d", glist_parent_count( ctx->listen_groups ));
-        write_linebuf_partial_attr( A_BOLD );
-        add_to_linebuf( " listening," );
-        write_linebuf_partial();
-
-        add_to_linebuf( " %d", get_ignored_count( ctx ) );
-        write_linebuf_partial_attr( A_BOLD );
-        add_to_linebuf( " filtered" );
+        write_statnum( glist_parent_count( ctx->listen_groups), " listening,");
+        write_statnum( get_ignored_count(ctx), " ignored");
 
         write_linebuf();
         
