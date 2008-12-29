@@ -125,6 +125,9 @@ static void insert_new_connection( struct tcp_connection *conn_p,
 
         chash_put(ctx->chash, conn_p );
 
+        if ( metadata_is_ignored( conn_p->metadata ) )
+                return;
+
         if ( info_p != NULL ) {
                 /* Add the connection to the group on pidinfo struct instead of
                  * pushing it to newq. Also connections on LISTEN state will be
@@ -174,6 +177,7 @@ int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_stor
 {
         struct group *grp;
         struct pidinfo *info_p = NULL;
+        struct filter *filt;
 
         struct tcp_connection *conn_p = chash_get(ctx->chash, local_addr, remote_addr );
         
@@ -187,6 +191,7 @@ int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_stor
                         } 
                 }
                 DBG( "New connection\n" );
+
                         
                 ctx->new_count++;
                 conn_p = mem_alloc( sizeof( struct tcp_connection ));
@@ -196,8 +201,20 @@ int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_stor
                 conn_p->state = state;
                 conn_p->family = local_addr->ss_family;
 
-                insert_new_connection( conn_p, inode, info_p, ctx );
+                filt = ctx->filters;
+                while ( filt != NULL ) {
+                        if ( filter_match( filt, conn_p ) ) {
+                                if ( filt->action == FILTERACT_IGNORE ) {
+                                        metadata_set_flag( conn_p->metadata, METADATA_IGNORED );
+                                        group_add_connection( filt->group, conn_p );
+                                } 
+                                /* FIXME: check for other filter actions */
+                                break; /* first hit counts */
+                        }
+                        filt = filt->next;
+                }
 
+                insert_new_connection( conn_p, inode, info_p, ctx );
 
         } else {
                 TRACE( "Found connection data \n" );
@@ -412,8 +429,18 @@ int purge_closed_connections( struct stat_context *ctx, int closed_cnt )
 {
         struct group *grp;
         struct pidinfo *info_p;
+        struct filter *filt;
 
         TRACE( "Purging %d connections \n", closed_cnt );
+
+        /* first, lets see if there are any on filtered connections */
+        filt = ctx->filters;
+        while ( filt != NULL && closed_cnt > 0 ) {
+                closed_cnt = closed_cnt - purge_closed_from_group(
+                                ctx->chash, filt->group, ctx->do_linger );
+                filt = filt->next;
+        }
+
 
         /* if we are follwing PIDs connections are stored to groups on pidinfo*/
         if ( ctx->follow_pid ) {
@@ -507,6 +534,34 @@ void switch_grouping( struct stat_context *ctx, policy_flags_t new_grouping )
 
 
 /** 
+ * @brief Clear metadata flags from all the connections on given group.
+ *
+ * The flags in metadata which are used to determine active connections
+ * are cleared from all the connections on the given group. 
+ *
+ * @see clear_metadata_flags()
+ * @see metadata_clear_flags()
+ * 
+ * @param grp The group whose connections should be cleared.
+ */
+void group_clear_metadata_flags( struct group *grp )
+{
+        struct tcp_connection *conn;
+
+        conn = group_get_parent( grp );
+        if ( conn != NULL )
+                metadata_clear_flags( conn->metadata );
+
+        conn = group_get_first_conn( grp );
+        while ( conn != NULL ) {
+                metadata_clear_flags( conn->metadata );
+                conn = conn->next;
+        }
+}
+
+
+
+/** 
  * @brief Clear the metatda from all the connections on all the groups on given
  * list.
  *
@@ -523,19 +578,10 @@ void switch_grouping( struct stat_context *ctx, policy_flags_t new_grouping )
 void clear_metadata_flags( struct glist *list )
 {
         struct group *grp;
-        struct tcp_connection *conn;
 
         grp = glist_get_head( list );
         while ( grp != NULL ) {
-                conn = group_get_parent( grp );
-                if ( conn != NULL )
-                        metadata_clear_flags( conn->metadata );
-
-                conn = group_get_first_conn( grp );
-                while ( conn != NULL ) {
-                        metadata_clear_flags( conn->metadata );
-                        conn = conn->next;
-                }
+                group_clear_metadata_flags( grp );
                 grp = grp->next;
         }
 }

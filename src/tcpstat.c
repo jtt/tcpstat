@@ -229,6 +229,47 @@ static int parse_pids( struct stat_context *ctx, char *argstr )
         return count;
 }
 
+/** 
+ * @brief Create a set of filters which will filter on ports specified on given string. 
+ * The string should contain the number of ports separated by commas.
+ * 
+ * @param ctx Pointer to the local context.
+ * @param policy Policy to set to the filter.
+ * @param act Action to set to the filter
+ * @param argstr String containing the ports 
+ * 
+ * @return 0 if the filters were created properly, < 0 on error.
+ */
+static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
+                enum filter_action act, char *argstr )
+{
+        char *str_p;
+        struct filter *filt;
+        int port; 
+
+        if ( ! argstr || strlen( argstr ) == 0 ) 
+                return 0;
+
+        str_p = strtok(argstr,",");
+        while( str_p != NULL ) {
+                port = strtol( str_p, NULL, 10 );
+                filt = mem_alloc( sizeof *filt );
+                memset( filt, 0, sizeof *filt);
+                TRACE("Adding filtering for port %d \n", port );
+                ((struct sockaddr_in *)&filt->raddr)->sin_port = htons(port);
+                filt->raddr.ss_family = AF_INET; /* XXX */
+                filt->action = act;
+                filt->policy = policy;
+                filt->next = ctx->filters;
+                filt->group = group_init();
+                ctx->filters = filt;
+                str_p = strtok(NULL,",");
+        }
+
+        return 0;
+}
+
+
 
 /** 
  * @brief Do graceful exit of the program.
@@ -315,6 +356,7 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                { "ifstats",0,0,'i'},
                { "ipv4", 0,0, '4'},
                { "ipv6", 0,0, '6'},
+               { "ignore-rport", 1,0,'R'},
 #ifdef DEBUG
                { "debug",1,0,'D'},
 #endif /* DEBUG */    
@@ -322,7 +364,7 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
        };      
 
        while( 1 ) {
-              c = getopt_long( argc, argv, "hlnLi46rg:d:p:I:", sw_long_options, &option_index );
+              c = getopt_long( argc, argv, "hlnLi46rg:d:p:R:", sw_long_options, &option_index );
               if ( c == -1 ) {
                      break;
               }
@@ -375,7 +417,13 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                              }
                              ctx->follow_pid = 1;
                              break;
-
+                      case 'R' :
+                             if ( parse_port_filter( ctx, POLICY_REMOTE | POLICY_PORT, FILTERACT_IGNORE, 
+                                                     optarg ) < 0 ) {
+                                    ERROR(" Unable to create filter!\n");
+                                   exit( EXIT_FAILURE );
+                             }
+                             break;
                       default :
                              print_help( argv[0] );
                              mem_free( ctx );
@@ -392,6 +440,7 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
 int main( int argc, char *argv[] ) 
 {
         struct stat_context *ctx;
+        struct filter *filt;
         int round =0,rv;
 
 
@@ -433,6 +482,7 @@ int main( int argc, char *argv[] )
         ctx->do_linger = 0;
         ctx->do_ifstats = 0;
         ctx->collected_stats = STAT_ALL;
+        ctx->filters = NULL;
 
         strncpy( progname, argv[0], PROGNAMELEN );
 
@@ -496,6 +546,21 @@ int main( int argc, char *argv[] )
                         }
                 }
                 ui_update_view( ctx );
+                /* XXX :
+                 * The views will clear metadata flags for all other than
+                 * filtered connections. Simplify this so that the metadata
+                 * clearing is done on single place properly
+                 */
+
+                /* clear the metadata flags from the filtered connections */
+                filt = ctx->filters;
+                if ( filt != NULL ) {
+                        if ( filt->group != NULL ) {
+                                group_clear_metadata_flags( filt->group );
+                        }
+                        filt = filt->next;
+                }
+
                 ctx->new_count = 0;
                 ctx->total_count = 0;
                 /*sleep( ctx->update_interval );*/
