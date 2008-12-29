@@ -554,7 +554,7 @@ int main( int argc, char *argv[] )
 
                 /* clear the metadata flags from the filtered connections */
                 filt = ctx->filters;
-                if ( filt != NULL ) {
+                while ( filt != NULL ) {
                         if ( filt->group != NULL ) {
                                 group_clear_metadata_flags( filt->group );
                         }
