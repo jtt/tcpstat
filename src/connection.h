@@ -111,6 +111,10 @@ struct conn_metadata {
  * tried.
  */
 #define METADATA_RESOLVED 0x10
+/**
+ * Flag indicating that the connection is ignored.
+ */
+#define METADATA_IGNORED 0x20
 
 /**
  * Mask for detecting if the connection has been 
@@ -123,6 +127,7 @@ struct conn_metadata {
 #define metadata_is_new(m)( m.flags & METADATA_NEW )
 #define metadata_is_state_changed(m)( m.flags & METADATA_STATE_CHANGED )
 #define metadata_is_touched(m)( m.flags & METADATA_TOUCHED_MASK )  
+#define metadata_is_ignored(m)( m.flags & METADATA_IGNORED )  
 #define metadata_clear_flags(m)( m.flags = m.flags & 0xF0 )
 
 

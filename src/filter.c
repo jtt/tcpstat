@@ -296,3 +296,20 @@ int filter_has_policy( struct filter *filt, policy_flags_t flags )
 
   return rv;
 }
+
+/** 
+ * @brief Get the number of connections on the associated group.
+ *
+ * If thre is no group associated with this filter 0 is returned.
+ * 
+ * @param filt Pointer to the filter whose connection count is needed.
+ * 
+ * @return  Number of connections on the group associated with this filter.
+ */
+int filter_get_connection_count( struct filter *filt )
+{
+        if ( filt->group == NULL )
+                return 0;
+
+        return group_get_size( filt->group );
+}
