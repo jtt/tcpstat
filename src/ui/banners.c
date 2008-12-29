@@ -212,8 +212,13 @@ void gui_print_banner( struct stat_context *ctx )
         add_to_linebuf( " %d", glist_parent_count( ctx->listen_groups ));
         write_linebuf_partial_attr( A_BOLD );
         add_to_linebuf( " listening," );
-        write_linebuf();
+        write_linebuf_partial();
 
+        add_to_linebuf( " %d", get_ignored_count( ctx ) );
+        write_linebuf_partial_attr( A_BOLD );
+        add_to_linebuf( " filtered" );
+
+        write_linebuf();
         
         //attroff( A_REVERSE );
 }

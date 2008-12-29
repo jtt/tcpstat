@@ -586,5 +586,31 @@ void clear_metadata_flags( struct glist *list )
         }
 }
 
+/** 
+ * @brief Get the number of connections that are currently being ignored. 
+ * 
+ * @param ctx Pointer to the global context.
+ * 
+ * @return Number of connections that are currently being ingored.
+ */
+int get_ignored_count( struct stat_context *ctx )
+{
+        struct filter *filt = ctx->filters;
+        int count = 0;
+
+        while ( filt != NULL ) {
+                if ( filt->action == FILTERACT_IGNORE ) 
+                        count += filter_get_connection_count( filt );
+                filt = filt->next;
+        }
+
+        return count;
+}
+
+
+
+
+        
+
 
 

@@ -73,6 +73,7 @@ int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_stor
 void clear_metadata_flags( struct glist *list );
 void group_clear_metadata_flags( struct group *grp );
 void resolve_route_for_connection( struct stat_context *ctx, struct tcp_connection *conn_p);
+int get_ignored_count( struct stat_context *ctx );
 
 
 

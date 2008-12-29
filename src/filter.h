@@ -167,3 +167,4 @@ struct filter *filter_from_connection( struct tcp_connection *conn_p,
                 policy_flags_t selector_flags, enum filter_action act );
 int filter_match( struct filter *filt, struct tcp_connection *conn_p );
 int filter_has_policy( struct filter *filt, policy_flags_t flags );
+int filter_get_connection_count( struct filter *filt );
