@@ -284,6 +284,7 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
 void do_exit( struct stat_context *ctx, char *exit_msg )
 {
         struct pidinfo *info_p;
+        struct filter *filt;
 
         DBG( "Exiting!\n" );
         ui_deinit();
@@ -301,6 +302,14 @@ void do_exit( struct stat_context *ctx, char *exit_msg )
                 free_pidinfo( info_p );
                 info_p = tmp;
         }
+        filt = ctx->filters;
+        while ( filt != NULL ) {
+                struct filter *nxt = filt->next;
+                group_deinit( filt->group, 1 );
+                mem_free( filt );
+                filt = nxt;
+        }
+
         cqueue_deinit( ctx->newq, 1 );
         glist_deinit( ctx->listen_groups,1  );
         glist_deinit( ctx->out_groups,1 );
