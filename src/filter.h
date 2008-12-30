@@ -163,6 +163,10 @@ struct filter {
         time_t cloud_stamp;
 };
 
+struct filter *filter_init( policy_flags_t policy, enum filter_action act,
+                int init_group );
+void filter_deinit( struct filter *filt, int deinit_group );
+
 struct filter *filter_from_connection( struct tcp_connection *conn_p,
                 policy_flags_t selector_flags, enum filter_action act );
 int filter_match( struct filter *filt, struct tcp_connection *conn_p );

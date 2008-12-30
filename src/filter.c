@@ -66,6 +66,55 @@
  * to have desired policy.
  */
 
+/** 
+ * @brief Initialize new filter with given policy and action. 
+ *
+ * If @a init_group is non-zero, the associated connection group for the filter
+ * is also initialized. 
+ * 
+ * @ingroup filter_api
+ * 
+ * @param policy Policy for the filter
+ * @param act Action for the filter
+ * @param init_group If non-zero, the associated group is also initialized.
+ * 
+ * @return New filter.
+ */
+struct filter *filter_init( policy_flags_t policy, enum filter_action act,
+                int init_group )
+{
+        struct filter *filt;
+
+        filt = mem_alloc( sizeof( *filt));
+        memset( filt, 0, sizeof( *filt ));
+        filt->action = act;
+        filt->policy = policy;
+        if ( init_group )
+                filt->group = group_init();
+
+        return filt;
+}
+
+/** 
+ * @brief Deinitialize the given filter. 
+ *
+ * If @a deinit_group is non-zero, then the associated group is also deinitialized.
+ * @note If the associated group is deinitialized, then the connections on the
+ * group are also deinitialized. This might lead into all kinds of nastiness if
+ * there are pointers to these groups around (especially in the hash table).
+ * 
+ * @ingroup filter_api
+ *
+ * @param filt Filter to deinitialize
+ * @param deinit_group If non-zero, deinitialize also the associated group.
+ */
+void filter_deinit( struct filter *filt, int deinit_group )
+{
+        if ( deinit_group && filt->group != NULL )
+                group_deinit( filt->group, 1 );
+
+        mem_free( filt );
+}
 
 /**
  * Create new filter that should match given connection. Filter is created to
@@ -83,8 +132,7 @@ struct filter *filter_from_connection( struct tcp_connection *conn_p,
 {
         struct filter *filt;
 
-        filt = mem_alloc( sizeof(struct filter));
-        memset( filt, 0, sizeof( struct filter ));
+        filt = filter_init( selector_flags, act, 0 );
 
         if ( selector_flags & POLICY_LOCAL ) {
                 memcpy( &filt->laddr, &conn_p->laddr, sizeof( struct sockaddr_storage ));
@@ -101,9 +149,6 @@ struct filter *filter_from_connection( struct tcp_connection *conn_p,
                 filt->cloud_stamp = time(NULL);
         if ( selector_flags & POLICY_IF ) 
           filt->ifname = conn_p->metadata.ifname;
-
-        filt->policy = selector_flags;
-        filt->action = act;
 
 
         return filt;
@@ -280,6 +325,8 @@ int filter_match( struct filter *filt, struct tcp_connection *conn_p )
  * Note that this check may return 1 if there are also other flags than the
  * specified set on.
  *
+ * @ingroup filter_api
+ *
  * @param filt Pointer to the filter.
  * @param flags Flags to check.
  * @return 1 if the given flags are set on, 0 if not.
@@ -301,6 +348,8 @@ int filter_has_policy( struct filter *filt, policy_flags_t flags )
  * @brief Get the number of connections on the associated group.
  *
  * If thre is no group associated with this filter 0 is returned.
+ *
+ * @ingroup filter_api
  * 
  * @param filt Pointer to the filter whose connection count is needed.
  * 

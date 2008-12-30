@@ -259,15 +259,13 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
         str_p = strtok(argstr,",");
         while( str_p != NULL ) {
                 port = strtol( str_p, NULL, 10 );
-                filt = mem_alloc( sizeof *filt );
-                memset( filt, 0, sizeof *filt);
+                filt = filter_init( policy, act, 1 );
+
                 TRACE("Adding filtering for port %d \n", port );
                 ((struct sockaddr_in *)&filt->raddr)->sin_port = htons(port);
                 filt->raddr.ss_family = AF_INET; /* XXX */
-                filt->action = act;
-                filt->policy = policy;
+
                 filt->next = ctx->filters;
-                filt->group = group_init();
                 ctx->filters = filt;
                 str_p = strtok(NULL,",");
         }
@@ -298,8 +296,7 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
         if ( !argstr || strlen( argstr ) == 0 ) 
                 return -1;
 
-        filt = mem_alloc( sizeof *filt );
-        memset( filt, 0, sizeof *filt );
+        filt = filter_init( policy, act, 1 );
 
         sin_p = (struct sockaddr_in *) &filt->raddr;
         if ( inet_pton( AF_INET, argstr, &sin_p->sin_addr ) <= 0 ) {
@@ -309,9 +306,6 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
         }
         sin_p->sin_family = AF_INET;
         sin_p->sin_port = 0;
-        filt->action = act;
-        filt->policy = policy;
-        filt->group = group_init();
 
         filt->next = ctx->filters;
         ctx->filters = filt;
