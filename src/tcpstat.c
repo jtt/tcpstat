@@ -352,8 +352,7 @@ void do_exit( struct stat_context *ctx, char *exit_msg )
         filt = ctx->filters;
         while ( filt != NULL ) {
                 struct filter *nxt = filt->next;
-                group_deinit( filt->group, 1 );
-                mem_free( filt );
+                filter_deinit( filt, 1 );
                 filt = nxt;
         }
 

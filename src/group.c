@@ -92,7 +92,7 @@ void group_deinit( struct group *group_p, int free_connections )
                 cqueue_deinit( group_p->group_q, free_connections );
         }
         if ( group_p->grp_filter != NULL ) {
-                mem_free( group_p->grp_filter );
+                filter_deinit( group_p->grp_filter, 0 );
         }
         mem_free( group_p );
 }
