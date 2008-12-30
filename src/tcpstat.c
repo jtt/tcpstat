@@ -45,7 +45,10 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <signal.h>
+
+#include <arpa/inet.h> /* inet_pton() */
 #include <errno.h>
+
 
 #include "defs.h"
 #include "debug.h"
@@ -154,6 +157,7 @@ static void print_help( char *name  )
         printf( "\t--ipv6 or -6    : Collect only IPv6 TCP connection statistics\n" ); 
         printf( "\tFiltering options : \n");
         printf( "\t--ignore-rport <port>[,<port>,<port>] : Ignore connections with given remote port(s)\n" );
+        printf( "\t--ignore-raddr <addr> : Ignore connections with given remote address\n" );
 #ifdef DEBUG
         printf( "\t--debug <lvl> or -D <lvl> : Set debug level (0,1,2,3)\n" );
 #endif /* DEBUG */
@@ -250,7 +254,7 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
         int port; 
 
         if ( ! argstr || strlen( argstr ) == 0 ) 
-                return 0;
+                return -1;
 
         str_p = strtok(argstr,",");
         while( str_p != NULL ) {
@@ -270,6 +274,55 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
 
         return 0;
 }
+
+/** 
+ * @brief Create a filter which will filter on address given as argument. 
+ *
+ * The policy and action for the filter are set as given.
+ *
+ * @bug currently supports only IPv4 addresses.
+ * 
+ * @param ctx Pointer to the global context.
+ * @param policy Policy to set for the filter.
+ * @param act Action to set for the filter.
+ * @param argstr String containing the (IPv4) address to filter.
+ * 
+ * @return 0 on success, -1 on error.
+ */
+static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
+                enum filter_action act, char *argstr )
+{
+        struct filter *filt;
+        struct sockaddr_in *sin_p;
+
+        if ( !argstr || strlen( argstr ) == 0 ) 
+                return -1;
+
+        filt = mem_alloc( sizeof *filt );
+        memset( filt, 0, sizeof *filt );
+
+        sin_p = (struct sockaddr_in *) &filt->raddr;
+        if ( inet_pton( AF_INET, argstr, &sin_p->sin_addr ) <= 0 ) {
+               WARN("Error in filtering address!"); 
+               mem_free( filt );
+               return -1;
+        }
+        sin_p->sin_family = AF_INET;
+        sin_p->sin_port = 0;
+        filt->action = act;
+        filt->policy = policy;
+        filt->group = group_init();
+
+        filt->next = ctx->filters;
+        ctx->filters = filt;
+
+        return 0;
+}
+
+
+
+        
+
 
 
 
@@ -368,6 +421,7 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                { "ipv4", 0,0, '4'},
                { "ipv6", 0,0, '6'},
                { "ignore-rport", 1,0,'R'},
+               { "ignore-raddr",1,0,'A'},
 #ifdef DEBUG
                { "debug",1,0,'D'},
 #endif /* DEBUG */    
@@ -375,7 +429,7 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
        };      
 
        while( 1 ) {
-              c = getopt_long( argc, argv, "hlnLi46rg:d:p:R:", sw_long_options, &option_index );
+              c = getopt_long( argc, argv, "hlnLi46rg:d:p:R:A:", sw_long_options, &option_index );
               if ( c == -1 ) {
                      break;
               }
@@ -433,6 +487,13 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                                                      optarg ) < 0 ) {
                                     ERROR(" Unable to create filter!\n");
                                    exit( EXIT_FAILURE );
+                             }
+                             break;
+                      case 'A' :
+                             if ( parse_addr_filter( ctx, POLICY_REMOTE | POLICY_ADDR, FILTERACT_IGNORE,
+                                                     optarg ) < 0 ) {
+                                     ERROR("Invalid address for ignore-address\n" );
+                                     exit( EXIT_FAILURE );
                              }
                              break;
                       default :
