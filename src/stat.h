@@ -62,7 +62,7 @@ struct stat_context {
 
         struct ifinfo_tab *iftab;/**< Table containing interface information */
         struct pidinfo *pinfo; /**< Struct containing information for followed processes. */
-        struct filter *filters; /**< Filters for new connections */
+        struct filter_list *filters; /**< Filters for new connections */
 };
 
 void switch_grouping( struct stat_context *ctx, policy_flags_t new_grouping );

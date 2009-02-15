@@ -201,17 +201,14 @@ int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_stor
                 conn_p->state = state;
                 conn_p->family = local_addr->ss_family;
 
-                filt = ctx->filters;
-                while ( filt != NULL ) {
-                        if ( filter_match( filt, conn_p ) ) {
-                                if ( filt->action == FILTERACT_IGNORE ) {
-                                        metadata_set_flag( conn_p->metadata, METADATA_IGNORED );
-                                        group_add_connection( filt->group, conn_p );
-                                } 
-                                /* FIXME: check for other filter actions */
-                                break; /* first hit counts */
-                        }
-                        filt = filt->next;
+                filt = filtlist_match( ctx->filters, conn_p );
+                if ( filt != NULL ) {
+                        if ( filt->action == FILTERACT_IGNORE ) {
+                                metadata_set_flag( conn_p->metadata,
+                                                METADATA_IGNORED );
+                                group_add_connection( filt->group,
+                                                conn_p );
+                        } 
                 }
 
                 insert_new_connection( conn_p, inode, info_p, ctx );
@@ -434,12 +431,19 @@ int purge_closed_connections( struct stat_context *ctx, int closed_cnt )
         TRACE( "Purging %d connections \n", closed_cnt );
 
         /* first, lets see if there are any on filtered connections */
+#if 0
         filt = ctx->filters;
         while ( filt != NULL && closed_cnt > 0 ) {
                 closed_cnt = closed_cnt - purge_closed_from_group(
                                 ctx->chash, filt->group, ctx->do_linger );
                 filt = filt->next;
         }
+#endif 
+        filtlist_foreach_filter( ctx->filters, filt ) {
+                closed_cnt = closed_cnt - purge_closed_from_group(
+                                ctx->chash, filt->group, ctx->do_linger);
+        }
+
 
 
         /* if we are follwing PIDs connections are stored to groups on pidinfo*/
@@ -595,13 +599,12 @@ void clear_metadata_flags( struct glist *list )
  */
 int get_ignored_count( struct stat_context *ctx )
 {
-        struct filter *filt = ctx->filters;
+        struct filter *filt; 
         int count = 0;
 
-        while ( filt != NULL ) {
+        filtlist_foreach_filter( ctx->filters, filt ) {
                 if ( filt->action == FILTERACT_IGNORE ) 
                         count += filter_get_connection_count( filt );
-                filt = filt->next;
         }
 
         return count;

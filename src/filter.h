@@ -163,6 +163,28 @@ struct filter {
         time_t cloud_stamp;
 };
 
+/**
+ * Match policy for traversing the filter list
+ */
+enum filtlist_policy {
+        LAST_MATCH, /**< Last match wins */
+        FIRST_MATCH /**< First match wins */
+};
+
+enum filtlist_add_policy {
+        ADD_FIRST,
+        ADD_LAST
+};
+
+/**
+ * Structure defining the a list of filters. 
+ */
+struct filter_list {
+        enum filtlist_policy policy; /**< Match policy for the list */
+        struct filter *first; /**< Pointer to the first element */
+};
+
+
 struct filter *filter_init( policy_flags_t policy, enum filter_action act,
                 int init_group );
 void filter_deinit( struct filter *filt, int deinit_group );
@@ -172,3 +194,16 @@ struct filter *filter_from_connection( struct tcp_connection *conn_p,
 int filter_match( struct filter *filt, struct tcp_connection *conn_p );
 int filter_has_policy( struct filter *filt, policy_flags_t flags );
 int filter_get_connection_count( struct filter *filt );
+
+struct filter_list *filtlist_init( enum filtlist_policy policy );
+void filtlist_deinit( struct filter_list *list );
+void filtlist_add( struct filter_list *list, struct filter *filt,
+                enum filtlist_add_policy pol );
+struct filter *filtlist_match( struct filter_list *list, struct tcp_connection *conn);
+enum filter_action filtlist_action_for( struct filter_list *list, 
+                struct tcp_connection *conn);
+void filtlist_clear_grp_metadata( struct filter_list *list );
+
+#define filtlist_foreach_filter(list, item) \
+        for( item = list->first; item != NULL; item=item->next )
+

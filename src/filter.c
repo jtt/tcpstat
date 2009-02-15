@@ -362,3 +362,133 @@ int filter_get_connection_count( struct filter *filt )
 
         return group_get_size( filt->group );
 }
+
+
+/** 
+ * @brief Initialize a filter list.
+ *
+ * @ingroup filter_api
+ * @param the matching policy used for this list
+ * @return New initialized filter list.
+ */
+struct filter_list *filtlist_init( enum filtlist_policy policy )
+{
+        struct filter_list *rv;
+
+        rv = mem_alloc( sizeof( struct filter_list ));
+        rv->policy = policy;
+        rv->first = NULL;
+        return rv;
+}
+
+/**
+ * Deinitialize the given filter list. All memory associated with the filters
+ * on this list is freed as is the list itself.
+ *
+ * Note that the group associated with a filter on this list is also
+ * deinitialized.
+ *
+ * @ingroup filter_api
+ * @param list Pointer to the list to deinitialize.
+ */
+void filtlist_deinit( struct filter_list *list )
+{
+        struct filter *filt, *tmp;
+
+        filt = list->first;
+        while ( filt != NULL ) {
+                tmp = filt->next;
+                filter_deinit( filt, 1 ); /* deinitializes the group! */
+                filt = tmp;
+        }
+        mem_free( list );
+}
+
+/**
+ * Add filter to filter list.
+ *
+ * @ingroup filter_api
+ * @param list Pointer to the list where items should be added.
+ * @param filt Filter to add to the list
+ * @param pol The policy stating where in the list the filter should be added. 
+ */
+void filtlist_add( struct filter_list *list, struct filter *filt,
+                enum filtlist_add_policy pol )
+{
+        struct filter *iter;
+
+        if ( pol == ADD_FIRST ) {
+                filt->next = list->first;
+                list->first = filt;
+        } else {
+
+                filt->next = NULL;
+                iter = list->first;
+                if ( iter == NULL ) {
+                        list->first = filt;
+                        return;
+                }
+
+                while ( iter->next != NULL )
+                        iter = iter->next;
+
+                iter->next = filt;
+
+        }
+}
+
+/**
+ * Match the given connection against the filters on the list and return pointer 
+ * to matching filter.
+ *
+ * The match whose action is returned depends on the policy of the list. If the
+ * policy is FIRST_MATCH, then the filter who matches the given connection is
+ * declared as the match, if the policy is LAST_MATCH, then the filter who
+ * matched last is the Match. Hence traversing LAST_MATCH policy lists takes
+ * longer since all the filters on the list have to be looked before the best
+ * match is found.
+ *
+ * @ingroup filter_api
+ * @param list Pointer to the filter list.
+ * @param conn Pointer to the connection to match.
+ * @return Pointer to filter matching the connection or NULL if no match is found.
+ */
+struct filter *filtlist_match( struct filter_list *list, struct tcp_connection *conn)
+{
+        struct filter *filt, *rv = NULL;
+        
+        filt = list->first;
+        while ( filt != NULL ) {
+                if ( filter_match( filt, conn ) ) {
+                        rv = filt;
+                        if ( list->policy == FIRST_MATCH )
+                                break;
+                }
+                filt = filt->next;
+        }
+        return rv;
+}
+
+
+/**
+ * Get the action for given connection from the matched filter. If no filter is
+ * matched then FILTERACT_NONE is returned (this is also, naturally, returned
+ * if the matching filter has this action.
+ *
+ * @ingroup filter_api
+ * @see filtlist_match
+ * @param list Pointer to the list.
+ * @param conn Connectiont to match agains the filters on this list.
+ * @return Action from the filter which matched (best) the given connection.
+ */
+enum filter_action filtlist_action_for( struct filter_list *list, 
+                struct tcp_connection *conn)
+{
+        enum filter_action rv = FILTERACT_NONE;
+        struct filter *filt = filtlist_match( list, conn );
+
+        if ( filt != NULL )
+                rv = filt->action;
+
+        return rv;
+}

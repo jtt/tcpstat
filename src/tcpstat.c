@@ -265,8 +265,7 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
                 ((struct sockaddr_in *)&filt->raddr)->sin_port = htons(port);
                 filt->raddr.ss_family = AF_INET; /* XXX */
 
-                filt->next = ctx->filters;
-                ctx->filters = filt;
+                filtlist_add( ctx->filters, filt, ADD_LAST);
                 str_p = strtok(NULL,",");
         }
 
@@ -307,8 +306,7 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
         sin_p->sin_family = AF_INET;
         sin_p->sin_port = 0;
 
-        filt->next = ctx->filters;
-        ctx->filters = filt;
+        filtlist_add( ctx->filters, filt, ADD_LAST );
 
         return 0;
 }
@@ -331,7 +329,6 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
 void do_exit( struct stat_context *ctx, char *exit_msg )
 {
         struct pidinfo *info_p;
-        struct filter *filt;
 
         DBG( "Exiting!\n" );
         ui_deinit();
@@ -349,12 +346,7 @@ void do_exit( struct stat_context *ctx, char *exit_msg )
                 free_pidinfo( info_p );
                 info_p = tmp;
         }
-        filt = ctx->filters;
-        while ( filt != NULL ) {
-                struct filter *nxt = filt->next;
-                filter_deinit( filt, 1 );
-                filt = nxt;
-        }
+        filtlist_deinit( ctx->filters );
 
         cqueue_deinit( ctx->newq, 1 );
         glist_deinit( ctx->listen_groups,1  );
@@ -547,7 +539,7 @@ int main( int argc, char *argv[] )
         ctx->do_linger = 0;
         ctx->do_ifstats = 0;
         ctx->collected_stats = STAT_ALL;
-        ctx->filters = NULL;
+        ctx->filters = filtlist_init(FIRST_MATCH);
 
         strncpy( progname, argv[0], PROGNAMELEN );
 
@@ -618,12 +610,9 @@ int main( int argc, char *argv[] )
                  */
 
                 /* clear the metadata flags from the filtered connections */
-                filt = ctx->filters;
-                while ( filt != NULL ) {
-                        if ( filt->group != NULL ) {
+                filtlist_foreach_filter( ctx->filters, filt ) {
+                        if ( filt->group != NULL )
                                 group_clear_metadata_flags( filt->group );
-                        }
-                        filt = filt->next;
                 }
 
                 ctx->new_count = 0;
