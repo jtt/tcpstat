@@ -291,6 +291,8 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
 {
         struct filter *filt;
         struct sockaddr_in *sin_p;
+        struct sockaddr_in6 *sin6_p;
+        int ret;
 
         if ( !argstr || strlen( argstr ) == 0 ) 
                 return -1;
@@ -298,13 +300,22 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
         filt = filter_init( policy, act, 1 );
 
         sin_p = (struct sockaddr_in *) &filt->raddr;
-        if ( inet_pton( AF_INET, argstr, &sin_p->sin_addr ) <= 0 ) {
-               WARN("Error in filtering address!"); 
-               mem_free( filt );
-               return -1;
+        ret = inet_pton( AF_INET, argstr, &sin_p->sin_addr );
+        if ( ret > 0 ) { 
+                sin_p->sin_family = AF_INET;
+                sin_p->sin_port = 0;
+        } else {
+               DBG("Not IPv4 Address, trying IPv6\n");
+               sin6_p = (struct sockaddr_in6 *) &filt->raddr;
+               ret = inet_pton( AF_INET6, argstr, &sin6_p->sin6_addr );
+               if ( ret <= 0 ) {
+                       WARN("Given address is neither IPv4 nor IPv6\n");
+                       mem_free( filt );
+                       return -1;
+               }
+               sin6_p->sin6_family = AF_INET6;
+               sin6_p->sin6_port = 0;
         }
-        sin_p->sin_family = AF_INET;
-        sin_p->sin_port = 0;
 
         filtlist_add( ctx->filters, filt, ADD_LAST );
 
