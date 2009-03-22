@@ -182,7 +182,7 @@ int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_stor
         struct tcp_connection *conn_p = chash_get(ctx->chash, local_addr, remote_addr );
         
         if ( conn_p == NULL ) {
-                if ( ctx->follow_pid ) {
+                if ( OPERATION_ENABLED(ctx,OP_FOLLOW_PID) ) {
                         info_p = get_pidinfo_by_inode( inode, ctx->pinfo );
                         if (info_p == NULL ) {
                                 /* Does not belong to process we are following. */
@@ -370,7 +370,7 @@ static int do_lingering( struct tcp_connection *con_p )
  * @param table_p Pointer to hashtable from where the connection should also be
  * deleted (NULL if connection should not be deleted from any hashtable ).
  * @param grp Pointer to group from where the closed connections are searched.
- * @param do_linger 1 if dead connections should be lingered. 
+ * @param do_linger nonzero if dead connections should be lingered. 
  * 
  * @return Number of connections removed or lingering.
  */
@@ -431,27 +431,21 @@ int purge_closed_connections( struct stat_context *ctx, int closed_cnt )
         TRACE( "Purging %d connections \n", closed_cnt );
 
         /* first, lets see if there are any on filtered connections */
-#if 0
-        filt = ctx->filters;
-        while ( filt != NULL && closed_cnt > 0 ) {
-                closed_cnt = closed_cnt - purge_closed_from_group(
-                                ctx->chash, filt->group, ctx->do_linger );
-                filt = filt->next;
-        }
-#endif 
         filtlist_foreach_filter( ctx->filters, filt ) {
                 closed_cnt = closed_cnt - purge_closed_from_group(
-                                ctx->chash, filt->group, ctx->do_linger);
+                                ctx->chash, filt->group, 
+                                OPERATION_ENABLED(ctx,OP_LINGER) );
         }
 
 
 
         /* if we are follwing PIDs connections are stored to groups on pidinfo*/
-        if ( ctx->follow_pid ) {
+        if ( OPERATION_ENABLED(ctx, OP_FOLLOW_PID) ) {
                 info_p = ctx->pinfo;
                 while (info_p != NULL && closed_cnt > 0) {
                         closed_cnt = closed_cnt - purge_closed_from_group(
-                                        ctx->chash, info_p->grp, ctx->do_linger );
+                                        ctx->chash, info_p->grp, 
+                                        OPERATION_ENABLED(ctx,OP_LINGER) );
                         info_p = info_p->next;
                 }
                 return closed_cnt;
@@ -460,7 +454,7 @@ int purge_closed_connections( struct stat_context *ctx, int closed_cnt )
         grp = glist_get_head( ctx->out_groups );
         while ( grp != NULL  && closed_cnt > 0 ) {
                 closed_cnt = closed_cnt - purge_closed_from_group(ctx->chash, 
-                                grp, ctx->do_linger );
+                                grp, OPERATION_ENABLED(ctx,OP_LINGER) );
                 grp = glist_delete_grp_if_empty(ctx->out_groups, grp );
         }
 
@@ -476,7 +470,7 @@ int purge_closed_connections( struct stat_context *ctx, int closed_cnt )
                         closed_cnt--;
                 }
                 closed_cnt = closed_cnt - purge_closed_from_group(ctx->chash, 
-                                grp, ctx->do_linger );
+                                grp, OPERATION_ENABLED(ctx,OP_LINGER) );
                 grp = glist_delete_grp_if_empty(ctx->listen_groups, grp );
         }
 

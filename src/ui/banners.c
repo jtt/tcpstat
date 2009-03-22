@@ -136,7 +136,7 @@ void gui_print_banner( struct stat_context *ctx )
         } else if ( ctx->common_policy & POLICY_IF ) {
                 add_to_linebuf( " Interface" );
                 write_linebuf_partial_attr( A_BOLD );
-        } else if ( ctx->follow_pid ) {
+        } else if ( OPERATION_ENABLED(ctx, OP_FOLLOW_PID) ) {
                 add_to_linebuf( "pid" );
                 write_linebuf_partial_attr( A_BOLD );
         } else {
@@ -176,10 +176,10 @@ void gui_print_banner( struct stat_context *ctx )
                 }
         }
 
-        if ( ctx->do_linger ) 
+        if ( OPERATION_ENABLED(ctx,OP_LINGER ) ) 
                 add_to_linebuf( " lingering on" );
         write_linebuf();
-        if ( ctx->follow_pid ) {
+        if ( OPERATION_ENABLED(ctx, OP_FOLLOW_PID) ) {
                 info_p = ctx->pinfo;
                 add_to_linebuf("Following PIDs: ");
                 write_linebuf_partial();
@@ -198,7 +198,7 @@ void gui_print_banner( struct stat_context *ctx )
         write_statnum( ctx->total_count, " total,");
         write_statnum( ctx->new_count, " new,");
 
-        if ( !ctx->follow_pid ) {
+        if ( ! OPERATION_ENABLED(ctx, OP_FOLLOW_PID) ) {
                 /* we do not know the direction of connections on
                  * "follow pid" mode. 
                  */
@@ -301,7 +301,7 @@ void gui_print_if_banners( struct stat_context *ctx )
 void gui_print_in_banner( struct stat_context *ctx )
 {
         attron( A_REVERSE );
-        if ( ctx->display_listen ) {
+        if ( OPERATION_ENABLED(ctx, OP_SHOW_LISTEN) ) {
                 add_to_linebuf( "\t\t\t Listening and incoming (%d groups )\t\t\t",
                                 glist_get_size( ctx->listen_groups));
         } else {

@@ -365,7 +365,11 @@ int gui_init( struct stat_context *ctx )
         noecho();
 
         reset_ctx();
-        gui_ctx.do_resolve = ctx->do_resolve;
+        if ( OPERATION_ENABLED(ctx, OP_RESOLVE) ) 
+                gui_ctx.do_resolve = 1;
+        else
+                gui_ctx.do_resolve = 0;
+
         gui_ctx.ifstat_diffs = 0;
         gui_ctx.do_routing = 0;
         gui_ctx.view = MAIN_VIEW;

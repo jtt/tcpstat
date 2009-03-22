@@ -109,7 +109,7 @@ void ui_deinit( void )
 void ui_update_view( struct stat_context *ctx )
 {
         gui_print_banner( ctx );
-        if ( ctx->do_ifstats )
+        if( OPERATION_ENABLED(ctx, OP_IFSTATS) )
                 gui_print_if_banners( ctx );
 #ifdef DEBUG
         gui_print_dbg_banner( ctx );
@@ -178,11 +178,14 @@ void ui_input_loop( struct stat_context *ctx )
                 case 'N' :
                         TRACE( "Toggling numeric display\n" );
                         /* XXX */
-                        ctx->do_resolve = gui_toggle_resolve();
+                        if ( gui_toggle_resolve() ) 
+                                OPERATION_ENABLE(ctx, OP_RESOLVE);
+                        else
+                                OPERATION_DISABLE(ctx, OP_RESOLVE);
                         break;
                 case 'I' :
                         TRACE( "Toggling interface stats" );
-                        ctx->do_ifstats = ! ctx->do_ifstats;
+                        OPERATION_TOGGLE( ctx, OP_IFSTATS);
                         break;
                 case 'i' :
                         TRACE( "Toggling interface stat diffs" );

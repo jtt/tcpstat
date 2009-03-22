@@ -461,11 +461,11 @@ int main_input( struct stat_context *ctx, int key )
 
                 case 'l' :
                         TRACE( "Toggling display of listen & In groups \n" );
-                        ctx->display_listen = ! ctx->display_listen;
+                        OPERATION_TOGGLE(ctx, OP_SHOW_LISTEN);
                         break;
                 case 'L' :
                         TRACE( "Setting lingering on" );
-                        ctx->do_linger = ! ctx->do_linger;
+                        OPERATION_TOGGLE( ctx, OP_LINGER);
                         break;
                         case 'A' :
                         TRACE( "Switching grouping to remote address" );
@@ -602,7 +602,7 @@ static void do_print_stat( struct stat_context *ctx )
 
         grp = glist_get_head( ctx->listen_groups );
         while ( grp != NULL ) {
-                gui_print_group( grp, ctx->display_listen,1 );
+                gui_print_group( grp, OPERATION_ENABLED(ctx, OP_SHOW_LISTEN),1 );
                 grp = grp->next;
         }
         gui_print_out_banner( ctx );
@@ -628,7 +628,7 @@ static void do_print_stat( struct stat_context *ctx )
 int main_update( struct stat_context *ctx )
 {
 
-        if ( ctx->follow_pid )
+        if ( OPERATION_ENABLED(ctx, OP_FOLLOW_PID) )
                 do_print_stat_pids( ctx );
         else
                 do_print_stat( ctx );

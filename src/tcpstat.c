@@ -437,16 +437,16 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                              exit( EXIT_SUCCESS ); 
                              break;
                       case 'n' :
-                             ctx->do_resolve = 0;
+                             OPERATION_DISABLE(ctx,OP_RESOLVE);
                              break;
                       case 'l' :
-                             ctx->display_listen = 1;
+                             OPERATION_ENABLE(ctx, OP_SHOW_LISTEN);
                              break;
                       case 'L' :
-                             ctx->do_linger = 1;
+                             OPERATION_ENABLE(ctx,OP_LINGER);
                              break;
                       case 'i' :
-                             ctx->do_ifstats = 1;
+                             OPERATION_ENABLE(ctx, OP_IFSTATS);
                              break;
                       case '4' :
                              ctx->collected_stats = STAT_V4_ONLY;
@@ -476,7 +476,7 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                                      ERROR( "Unable to parse process ID's\n");
                                      exit( EXIT_FAILURE );
                              }
-                             ctx->follow_pid = 1;
+                             OPERATION_ENABLE(ctx, OP_FOLLOW_PID);
                              break;
                       case 'R' :
                              if ( parse_port_filter( ctx, POLICY_REMOTE | POLICY_PORT, FILTERACT_IGNORE, 
@@ -535,6 +535,7 @@ int main( int argc, char *argv[] )
 
         ctx = mem_alloc( sizeof( struct stat_context) );
         memset( ctx,0, sizeof( *ctx));
+        ctx->ops = 0;
         ctx->listen_groups = glist_init();
         ctx->out_groups = glist_init();
         ctx->newq = cqueue_init();
@@ -542,15 +543,12 @@ int main( int argc, char *argv[] )
         ctx->new_count = 0;
         ctx->total_count = 0;
         ctx->common_policy = DEFAULT_POLICY;
-        ctx->follow_pid = 0;
         ctx->update_interval = DEFAULT_UPDATE_INT;
         ctx->pinfo = NULL;
-        ctx->do_resolve = 1;
-        ctx->display_listen = 0;
-        ctx->do_linger = 0;
-        ctx->do_ifstats = 0;
         ctx->collected_stats = STAT_ALL;
         ctx->filters = filtlist_init(FIRST_MATCH);
+        
+        OPERATION_ENABLE( ctx, OP_RESOLVE);
 
         strncpy( progname, argv[0], PROGNAMELEN );
 
@@ -570,10 +568,10 @@ int main( int argc, char *argv[] )
 
         ui_init( ctx );
         while ( 1 )  {
-                if ( ctx->follow_pid ) 
+                if ( OPERATION_ENABLED(ctx,OP_FOLLOW_PID) ) 
                         scan_inodes( ctx->pinfo );
 
-                if ( ctx->do_ifstats )
+                if ( OPERATION_ENABLED(ctx, OP_IFSTATS ))
                         read_interface_stat( ctx );
                 
                 if ( ctx->collected_stats != STAT_V4_ONLY ) {
@@ -591,7 +589,7 @@ int main( int argc, char *argv[] )
                         }
                 }
 
-                if ( !ctx->follow_pid ) {
+                if ( ! OPERATION_ENABLED(ctx, OP_FOLLOW_PID)) {
                         rotate_new_queue( ctx );
                 }
                 round++;
@@ -607,7 +605,7 @@ int main( int argc, char *argv[] )
                                 }
                         }
                 }  
-                if ( ctx->follow_pid ) {
+                if ( OPERATION_ENABLED( ctx, OP_FOLLOW_PID) ) {
                         if ( check_dead_processes( ctx ) == 0 ) {
                                 /* XXX - Some message is needed */
                                 do_exit( ctx, "No more processes to follow!\n" );

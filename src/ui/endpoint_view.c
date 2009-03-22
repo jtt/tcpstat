@@ -90,7 +90,7 @@ int init_endpoint_view( struct stat_context *ctx )
                 WARN("Already on endpoint view\n");
                 return 0;
         }
-        if ( ctx->follow_pid ) {
+        if ( OPERATION_ENABLED(ctx, OP_FOLLOW_PID) ) {
                 ui_show_message(LOCATION_BANNER,"Endpoint view not available on follow pid -mode");
                 return -1;
         }

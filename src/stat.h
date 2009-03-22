@@ -38,6 +38,14 @@
 #define STAT_V4_ONLY 1
 #define STAT_V6_ONLY 2
 
+#define OP_FOLLOW_PID 0x01
+#define OP_RESOLVE 0x02
+#define OP_LINGER 0x04
+#define OP_IFSTATS 0x08
+#define OP_SHOW_LISTEN 0x10
+
+typedef uint8_t operation_flags_t;
+
 /**
  * The main context holding together all information.
  */ 
@@ -45,13 +53,10 @@ struct stat_context {
 
         int new_count; /**< Number of new connections on iteration */
         int total_count;/**< Total number of connections */
-        int follow_pid;/**< 1 of 'follow PIDs' mode is on */
-        int do_resolve; /**< Resolve hostnames */
-        int do_linger; /**< Linger closed connections */
-        int do_ifstats; /**< Collect interface statistics */
-        int display_listen; /**< display listen groups */
         int update_interval;/**< nr of secods between updates */
         int collected_stats; /**< what stats to collect */ 
+
+        operation_flags_t ops; /** currently active operations */
 
         policy_flags_t common_policy; /**< Global grouping policy */
         
@@ -74,6 +79,12 @@ void clear_metadata_flags( struct glist *list );
 void group_clear_metadata_flags( struct group *grp );
 void resolve_route_for_connection( struct stat_context *ctx, struct tcp_connection *conn_p);
 int get_ignored_count( struct stat_context *ctx );
+
+#define OPERATION_ENABLE(c,o) ( c->ops = c->ops | o )
+#define OPERATION_DISABLE(c,o) (c->ops = c->ops & ~o)
+#define OPERATION_ENABLED(c,o) (c->ops & o )
+#define OPERATION_TOGGLE(c,o) ( c->ops = c->ops ^ o )
+
 
 
 
