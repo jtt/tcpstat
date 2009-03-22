@@ -1,8 +1,14 @@
 /**
  * @file stat.h
- * @brief Fill me in 
+ * @brief Header file containing the type definitions for the global context and some helper functions.
  *
- * Copyright (c) 2006, J. Taimisto
+ * This file contains the type definition of struct stat_context which is the
+ * main context holding all the information together. This file also contains
+ * declarations of some functions which are implemented in stat.c which holds
+ * "general" functions not having any specific module.
+ *
+ *
+ * Copyright (c) 2006 - 2009, J. Taimisto
  * All rights reserved.
  *  
  * Redistribution and use in source and binary forms, with or without
@@ -30,20 +36,55 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @author Jukka Taimisto 
+ * @author Jukka Taimisto <jtaimisto@gmail.com>
  */ 
 
 
+/* what statistics to collect */
+/**
+ * Collect both IPv4 and IPv6 stats
+ */
 #define STAT_ALL 0
+/**
+ * Collect only IPv4 stats
+ */
 #define STAT_V4_ONLY 1
+/**
+ * Collect only IPv6 stats
+ */
 #define STAT_V6_ONLY 2
 
+/* Following flags can be manipulated with the OPERATION_
+ * macros and they control some basic functionalities 
+ * of the program.
+ */
+/**
+ * Flag indicating that follow pid -mode is enabled
+ */
 #define OP_FOLLOW_PID 0x01
+/**
+ * Flag indicating that IP address name resolution
+ * is enabled
+ */
 #define OP_RESOLVE 0x02
+/**
+ * Flag indicating that closed connections should
+ * be lingered
+ */
 #define OP_LINGER 0x04
+/**
+ * Flag indicating that interface stas should be shown.
+ */
 #define OP_IFSTATS 0x08
+/**
+ * Flag indicating that listening connections should
+ * be shown.
+ */
 #define OP_SHOW_LISTEN 0x10
 
+/**
+ * typedef for the type holding the operation flags,
+ */
 typedef uint8_t operation_flags_t;
 
 /**
@@ -80,15 +121,21 @@ void group_clear_metadata_flags( struct group *grp );
 void resolve_route_for_connection( struct stat_context *ctx, struct tcp_connection *conn_p);
 int get_ignored_count( struct stat_context *ctx );
 
+/**
+ * Enable the given operation (turn the flag on)
+ */
 #define OPERATION_ENABLE(c,o) ( c->ops = c->ops | o )
+/**
+ * Disable the given operation (turn the flag off)
+ */
 #define OPERATION_DISABLE(c,o) (c->ops = c->ops & ~o)
+/**
+ * Check if the operation is enabled (is the flag on)
+ */
 #define OPERATION_ENABLED(c,o) (c->ops & o )
+/**
+ * Toggle the operation enabled status (toggle the flag off if it is 
+ * on and on if it is off).
+ */
 #define OPERATION_TOGGLE(c,o) ( c->ops = c->ops ^ o )
-
-
-
-
-
-
-
 
