@@ -262,14 +262,12 @@ static int iterate_glist_with_connection( struct glist *list_p, struct tcp_conne
         struct group *grp_p;
         int found = 0; /* Set to 1 if found a matching group */
 
-        grp_p = glist_get_head( list_p );
-        while ( grp_p != NULL ) {
+        glist_foreach_group( list_p, grp_p ) {
                 if ( group_match_and_add( grp_p, con_p ) == 1 ) {
                         found = 1;
                         TRACE( "Found match!\n" );
                         break;
                 }
-                grp_p = grp_p->next;
         }
 
         return found;
@@ -506,15 +504,14 @@ void switch_grouping( struct stat_context *ctx, policy_flags_t new_grouping )
          * outgoing connections get regrouped and no stale conn_p->group
          * pointers are left hanging. 
          */
-        grp = glist_get_head( ctx->out_groups );
-        while ( grp != NULL ) {
+        glist_foreach_group( ctx->out_groups, grp ) {
+
                 queue_p = group_get_queue(grp);
                 while ( cqueue_get_size( queue_p ) > 0 ) {
                         conn_p = cqueue_pop( queue_p );
                         conn_p->group = NULL;
                         cqueue_push( ctx->newq, conn_p );
                 }
-                grp = grp->next;
         }
 #ifdef DEBUG
         /* This is just to make sure */
@@ -577,10 +574,8 @@ void clear_metadata_flags( struct glist *list )
 {
         struct group *grp;
 
-        grp = glist_get_head( list );
-        while ( grp != NULL ) {
+        glist_foreach_group( list, grp ) {
                 group_clear_metadata_flags( grp );
-                grp = grp->next;
         }
 }
 

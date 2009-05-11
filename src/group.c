@@ -544,12 +544,10 @@ int glist_get_size_nonempty( struct glist *list_p )
         struct group *grp;
         int count = 0;
 
-        grp = glist_get_head( list_p );
-        while ( grp != NULL ) {
+        glist_foreach_group( list_p, grp ) {
+
                 if ( group_get_size( grp ) != 0 ) 
                         count++;
-
-                grp = grp->next;
         }
 
         return count;

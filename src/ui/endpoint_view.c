@@ -191,10 +191,8 @@ int endpoint_update( struct stat_context *ctx )
         write_linebuf();
         attroff( A_REVERSE );
 
-        grp = glist_get_head( ctx->out_groups );
-        while( grp != NULL ) {
+        glist_foreach_group( ctx->out_groups, grp ) {
                 do_group( grp );
-                grp = grp->next;
         }
 
         /* XXX -- we need to go through this shit with

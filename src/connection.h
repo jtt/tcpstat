@@ -316,6 +316,9 @@ int glist_get_size_nonempty( struct glist *list_p );
 int glist_connection_count( struct glist *list_p );
 int glist_parent_count( struct glist *list_p );
 
+#define glist_foreach_group(list, item) \
+        for( item = list->head; item != NULL; item = item->next )
+
 #ifdef DEBUG 
 void dump_glist( struct glist *list_p );
 #endif 

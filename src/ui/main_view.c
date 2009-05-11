@@ -602,10 +602,8 @@ static void do_print_stat( struct stat_context *ctx )
                         glist_get_size_nonempty( ctx->listen_groups ) > 0 ) {
 
                 gui_print_in_banner( ctx );
-                grp = glist_get_head( ctx->listen_groups );
-                while ( grp != NULL ) {
+                glist_foreach_group( ctx->listen_groups, grp ) {
                         gui_print_group( grp, OPERATION_ENABLED(ctx, OP_SHOW_LISTEN),1 );
-                        grp = grp->next;
                 }
         } else {
                 // XXX I truly hate this
@@ -614,10 +612,8 @@ static void do_print_stat( struct stat_context *ctx )
 
         gui_print_out_banner( ctx );
         print_titlebar();
-        grp = glist_get_head( ctx->out_groups );
-        while ( grp != NULL ) {
+        glist_foreach_group( ctx->out_groups, grp ) {
                 gui_print_group( grp,1,1 );
-                grp = grp->next;
         }
 }
 
