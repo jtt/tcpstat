@@ -417,19 +417,13 @@ static void gui_print_group( struct group *grp, int print_parent, int print_bann
         }
          
         conn_p = group_get_parent( grp );
-        if ( conn_p ) {
-                if ( print_parent ) 
-                        gui_print_connection( conn_p );
-                /* XXX */
-                metadata_clear_flags( conn_p->metadata );
-        }
+        if ( conn_p && print_parent ) 
+                gui_print_connection( conn_p );
 
         conn_p = group_get_first_conn( grp );
 
         while ( conn_p != NULL ) {
                 gui_print_connection( conn_p );
-                /* XXX */
-                metadata_clear_flags( conn_p->metadata );
                 conn_p = conn_p->next;
         } 
 
@@ -605,9 +599,6 @@ static void do_print_stat( struct stat_context *ctx )
                 glist_foreach_group( ctx->listen_groups, grp ) {
                         gui_print_group( grp, OPERATION_ENABLED(ctx, OP_SHOW_LISTEN),1 );
                 }
-        } else {
-                // XXX I truly hate this
-                clear_metadata_flags( ctx->listen_groups );
         }
 
         gui_print_out_banner( ctx );

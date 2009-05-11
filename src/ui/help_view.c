@@ -147,9 +147,6 @@ int help_update( struct stat_context *ctx )
         add_to_linebuf(" Select a view to exit from help ");
         write_linebuf();
 
-        clear_metadata_flags( ctx->out_groups );
-        clear_metadata_flags( ctx->listen_groups );
-
         return 0;
 }
 

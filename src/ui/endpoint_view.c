@@ -161,14 +161,6 @@ static void do_group( struct group *grp )
                 add_to_linebuf(" / %d new", new_count );
 
         write_linebuf();
-
-        /* FIXME: we need to do this here, 
-         * this should be taken away from GUI functions
-         */
-        while ( conn_p != NULL ) {
-                metadata_clear_flags( conn_p->metadata );
-                conn_p = conn_p->next;
-        }
 }
 
 /** 
@@ -194,11 +186,6 @@ int endpoint_update( struct stat_context *ctx )
         glist_foreach_group( ctx->out_groups, grp ) {
                 do_group( grp );
         }
-
-        /* XXX -- we need to go through this shit with
-         * the listening groups too.
-         */
-        clear_metadata_flags( ctx->listen_groups );
 
         return 0;
 }

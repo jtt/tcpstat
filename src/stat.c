@@ -562,10 +562,7 @@ void group_clear_metadata_flags( struct group *grp )
  *
  * Since we use the connection metadta flags to determine those connections
  * which are not yet active, every update round all the metadata flags from
- * active connections have to be cleared. This is normally done by the main
- * view while printing information about the connections.  
- *
- * However, not all view go through all connections, hence this function.
+ * active connections have to be cleared. 
  * 
  * @param list Pointer to the list containing the groups whose connections
  * should be cleared.

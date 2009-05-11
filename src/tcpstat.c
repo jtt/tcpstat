@@ -612,11 +612,13 @@ int main( int argc, char *argv[] )
                         }
                 }
                 ui_update_view( ctx );
-                /* XXX :
-                 * The views will clear metadata flags for all other than
-                 * filtered connections. Simplify this so that the metadata
-                 * clearing is done on single place properly
+
+                /* clear metadata flags from all the connections, 
+                 * this way we'll notice new connections (and dead) 
+                 * on next round...
                  */
+                clear_metadata_flags( ctx->listen_groups );
+                clear_metadata_flags( ctx->out_groups );
 
                 /* clear the metadata flags from the filtered connections */
                 filtlist_foreach_filter( ctx->filters, filt ) {
