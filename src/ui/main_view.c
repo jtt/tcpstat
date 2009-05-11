@@ -598,13 +598,20 @@ static void do_print_stat( struct stat_context *ctx )
 {
         struct group *grp;
 
-        gui_print_in_banner( ctx );
+        if ( OPERATION_ENABLED( ctx, OP_SHOW_LISTEN) ||
+                        glist_get_size_nonempty( ctx->listen_groups ) > 0 ) {
 
-        grp = glist_get_head( ctx->listen_groups );
-        while ( grp != NULL ) {
-                gui_print_group( grp, OPERATION_ENABLED(ctx, OP_SHOW_LISTEN),1 );
-                grp = grp->next;
+                gui_print_in_banner( ctx );
+                grp = glist_get_head( ctx->listen_groups );
+                while ( grp != NULL ) {
+                        gui_print_group( grp, OPERATION_ENABLED(ctx, OP_SHOW_LISTEN),1 );
+                        grp = grp->next;
+                }
+        } else {
+                // XXX I truly hate this
+                clear_metadata_flags( ctx->listen_groups );
         }
+
         gui_print_out_banner( ctx );
         print_titlebar();
         grp = glist_get_head( ctx->out_groups );
