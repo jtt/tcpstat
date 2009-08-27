@@ -123,9 +123,24 @@ static int check_dead_processes( struct stat_context *ctx )
         return alive_count;
 }
 
-        
+/**
+ * Clear the metadata from the connections stored into pidinfo 
+ * structures. 
+ *
+ * In follow pid -mode we do not hold the connections in the
+ * listen_groups and out_groups, instead they are in the pidinfos. 
+ *
+ * @param ctx Pointer to the global context.
+ */
+static void clear_pid_metadata( struct stat_context *ctx ) 
+{
+        struct pidinfo *info_p = ctx->pinfo;
 
-        
+        while( info_p != NULL ) {
+                group_clear_metadata_flags( info_p->grp );
+                info_p = info_p->next;
+        }
+}
 
         
 static void print_help( char *name  )
@@ -617,8 +632,12 @@ int main( int argc, char *argv[] )
                  * this way we'll notice new connections (and dead) 
                  * on next round...
                  */
-                clear_metadata_flags( ctx->listen_groups );
-                clear_metadata_flags( ctx->out_groups );
+                if ( OPERATION_ENABLED( ctx, OP_FOLLOW_PID )) {
+                        clear_pid_metadata( ctx );
+                } else {
+                        clear_metadata_flags( ctx->listen_groups );
+                        clear_metadata_flags( ctx->out_groups );
+                }
 
                 /* clear the metadata flags from the filtered connections */
                 filtlist_foreach_filter( ctx->filters, filt ) {
