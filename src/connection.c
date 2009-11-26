@@ -903,26 +903,24 @@ int connection_do_addrstrings( struct tcp_connection *conn_p )
                         return -1;
                 }
         } else {
-                struct sockaddr_in6 *addr_p = (struct sockaddr_in6 *)&conn_p->laddr;
+                struct in6_addr *addr = ss_get_addr6( &conn_p->laddr);
 
-                if ( IN6_IS_ADDR_UNSPECIFIED( addr_p->sin6_addr.s6_addr) ) {
+                if ( IN6_IS_ADDR_UNSPECIFIED( addr->s6_addr ) ) {
                         strncpy( meta_p->laddr_string, ANY_ADDRSTR, ADDRSTR_BUFLEN );
                 } else {
 
-                        if ( inet_ntop( addr_p->sin6_family,
-                                                &addr_p->sin6_addr, 
-                                                meta_p->laddr_string,
+                        if ( inet_ntop( conn_p->laddr.ss_family,
+                                                addr, meta_p->laddr_string,
                                                 ADDRSTR_BUFLEN ) == NULL ) {
 
                                 WARN( "inet_ntop() failed, bailing out! \n" );
                                 return -1;
                         }
                 }
-                addr_p = (struct sockaddr_in6 *)&conn_p->raddr;
+                addr = ss_get_addr6( &conn_p->raddr );
 
-                if ( inet_ntop( addr_p->sin6_family,
-                                &addr_p->sin6_addr, 
-                                meta_p->raddr_string,
+                if ( inet_ntop( conn_p->raddr.ss_family,
+                                addr, meta_p->raddr_string,
                                 ADDRSTR_BUFLEN ) == NULL ) {
 
                         WARN( "inet_ntop() failed, bailing out! \n" );
@@ -932,3 +930,32 @@ int connection_do_addrstrings( struct tcp_connection *conn_p )
         return 0;
 }
 
+/**
+ * Get the struct in_addr from sockaddr_storage containing struct sockaddr_in.
+ * No checks are being made, make sure the family is right.
+ * @param ss Pointer to the sockaddr_strorage from where the in_addr should be
+ * returned. 
+ * @return struct in_addr from the contained struct sockaddr_in
+ */
+struct in_addr *ss_get_addr( struct sockaddr_storage *ss )
+{
+        struct in_addr *ret; 
+
+        ret = &((struct sockaddr_in *)ss)->sin_addr;
+        return ret;
+}
+
+/**
+ * Get the struct in6_addr from sockaddr_storage containing struct sockaddr_in6.
+ * No checks are being made, make sure the family is right.
+ * @param ss Pointer to the sockaddr_strorage from where the in6_addr should be
+ * returned. 
+ * @return struct in6_addr from the contained struct sockaddr_in6
+ */
+struct in6_addr *ss_get_addr6( struct sockaddr_storage *ss)
+{
+        struct in6_addr *ret; 
+
+        ret = &((struct sockaddr_in6 *)ss)->sin6_addr;
+        return ret;
+}

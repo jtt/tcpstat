@@ -75,6 +75,7 @@ static int token_to_addr( struct line_token *token, struct sockaddr_storage *add
         uint8_t buffer[4];
         int len;
         struct sockaddr_in *addrin_p;
+        uint32_t *addr;
         int rv = 0;
 
         if ( ptr == NULL ) {
@@ -89,9 +90,9 @@ static int token_to_addr( struct line_token *token, struct sockaddr_storage *add
 
         /* XXX len!! */
         str2bytes( token->token, buffer, &len );
-        //DEBUG_XDUMP( buffer, len, "IP address" );
-        /* XXX Make sure this is in network byte order */
-        addrin_p->sin_addr.s_addr = htonl(*((uint32_t *) buffer));
+        addr = (uint32_t *)buffer;
+
+        addrin_p->sin_addr.s_addr = htonl(*addr);
         addrin_p->sin_family = AF_INET;
 
         addrin_p->sin_port = htons( (uint16_t)strtol( port, NULL, 16 ) );
@@ -294,13 +295,11 @@ static void parse_connection6_data( char *line, void *ctx )
                 WARN( "Eccess elements in token structure \n" );
         }
 
-        inet_ntop( ((struct sockaddr_in6 *)&local_addr)->sin6_family, 
-                        &(((struct sockaddr_in6 *)&local_addr)->sin6_addr),
-                        addrbuf, INET6_ADDRSTRLEN );
+        inet_ntop( local_addr.ss_family,
+                        ss_get_addr6( &local_addr ),addrbuf, INET6_ADDRSTRLEN );
         DBG( "Read local IPV6 address %s \n", addrbuf );
-        inet_ntop( ((struct sockaddr_in6 *)&remote_addr)->sin6_family, 
-                        &(((struct sockaddr_in6 *)&remote_addr)->sin6_addr),
-                        addrbuf, INET6_ADDRSTRLEN );
+        inet_ntop( remote_addr.ss_family,
+                        ss_get_addr6( &remote_addr ), addrbuf, INET6_ADDRSTRLEN );
         DBG( "Read remote IPV6 address %s \n", addrbuf );
 
 

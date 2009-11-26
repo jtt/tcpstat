@@ -203,14 +203,12 @@ static int match_saddr( struct sockaddr_storage *filt_addr,
                                 return 0;
                         }
                         if ( filt_addr->ss_family == AF_INET ) {
-                                if( memcmp( &((struct sockaddr_in *)filt_addr)->sin_addr,
-                                               &((struct sockaddr_in *)conn_addr)->sin_addr,
+                                if( memcmp( ss_get_addr( filt_addr), ss_get_addr( conn_addr ),
                                                sizeof( struct in_addr ) ) == 0) {
                                         rv = 1;
                                 }
                         } else {
-                                if (memcmp( &((struct sockaddr_in6 *)filt_addr)->sin6_addr,
-                                               &((struct sockaddr_in6 *)conn_addr)->sin6_addr,
+                                if (memcmp( ss_get_addr6(filt_addr), ss_get_addr6(conn_addr),
                                                sizeof( struct in6_addr ) ) == 0 ) {
                                         rv  = 1;
                                 }
