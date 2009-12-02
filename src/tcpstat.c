@@ -48,6 +48,7 @@
 
 #include <arpa/inet.h> /* inet_pton() */
 #include <errno.h>
+#include <netdb.h> /* getaddrinfo() */
 
 
 #include "defs.h"
@@ -292,8 +293,6 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
  *
  * The policy and action for the filter are set as given.
  *
- * @bug currently supports only IPv4 addresses.
- * 
  * @param ctx Pointer to the global context.
  * @param policy Policy to set for the filter.
  * @param act Action to set for the filter.
@@ -305,15 +304,36 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
                 enum filter_action act, char *argstr )
 {
         struct filter *filt;
+#if 0
         struct sockaddr_in *sin_p;
         struct sockaddr_in6 *sin6_p;
+#endif 
+        struct addrinfo *ainfo, *ait;
         int ret;
 
         if ( !argstr || strlen( argstr ) == 0 ) 
                 return -1;
 
-        filt = filter_init( policy, act, 1 );
+        ret = getaddrinfo( argstr, NULL, NULL, &ainfo );
+        if ( ret != 0 ) {
+                WARN("Unable to resolve the filter address");
+                return -1;
+        }
 
+        ait = ainfo;
+
+        while ( ait != NULL ) {
+                filt = filter_init( policy, act, 1 );
+                DBG("Got address with family %s \n", ait->ai_family == AF_INET ? "INET" : "INET6" );
+                memcpy( &filt->raddr, ait->ai_addr, ait->ai_addrlen );
+                filtlist_add( ctx->filters, filt, ADD_LAST );
+
+                ait = ait->ai_next;
+        }
+
+        freeaddrinfo( ainfo );
+
+#if 0
         sin_p = (struct sockaddr_in *) &filt->raddr;
         ret = inet_pton( AF_INET, argstr, &sin_p->sin_addr );
         if ( ret > 0 ) { 
@@ -333,6 +353,7 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
         }
 
         filtlist_add( ctx->filters, filt, ADD_LAST );
+#endif
 
         return 0;
 }
