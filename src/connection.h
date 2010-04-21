@@ -117,6 +117,12 @@ struct conn_metadata {
 #define METADATA_IGNORED 0x20
 
 /**
+ * Flag indicating that UI should show some warning
+ * about this connection.
+ */
+#define METADATA_WARN 0x40
+
+/**
  * Mask for detecting if the connection has been 
  * touched during this update. Used to detect closed
  * connections.
@@ -128,6 +134,7 @@ struct conn_metadata {
 #define metadata_is_state_changed(m)( m.flags & METADATA_STATE_CHANGED )
 #define metadata_is_touched(m)( m.flags & METADATA_TOUCHED_MASK )  
 #define metadata_is_ignored(m)( m.flags & METADATA_IGNORED )  
+#define metadata_is_warn(m) (m.flags & METADATA_WARN )
 #define metadata_clear_flags(m)( m.flags = m.flags & 0xF0 )
 
 

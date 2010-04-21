@@ -208,6 +208,9 @@ int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_stor
                                                 METADATA_IGNORED );
                                 group_add_connection( filt->group,
                                                 conn_p );
+                        } else if ( filt->action == FILTERACT_WARN ) {
+                               metadata_set_flag( conn_p->metadata,
+                                              METADATA_WARN );
                         } 
                 }
 

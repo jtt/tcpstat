@@ -174,6 +174,8 @@ static void print_help( char *name  )
         printf( "\tFiltering options : \n");
         printf( "\t--ignore-rport <port>[,<port>,<port>] : Ignore connections with given remote port(s)\n" );
         printf( "\t--ignore-raddr <addr> : Ignore connections with given remote address\n" );
+        printf( "\t--warn-raddr <addr> : Warn about (mark with !) connections with given remote address\n" );
+        printf( "\t--warn-rport <port>[,<port>,<port>] : Warn (mark with !) about connections with given remote port(s)\n");
 #ifdef DEBUG
         printf( "\t--debug <lvl> or -D <lvl> : Set debug level (0,1,2,3)\n" );
 #endif /* DEBUG */
@@ -459,6 +461,8 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                { "ipv6", 0,0, '6'},
                { "ignore-rport", 1,0,'R'},
                { "ignore-raddr",1,0,'A'},
+               { "warn-raddr",1,0,'w' },
+               { "warn-rport",1,0,'W' },
 #ifdef DEBUG
                { "debug",1,0,'D'},
 #endif /* DEBUG */    
@@ -531,6 +535,20 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                                                      optarg ) < 0 ) {
                                      ERROR("Invalid address for ignore-address\n" );
                                      exit( EXIT_FAILURE );
+                             }
+                             break;
+                      case 'w' :
+                             if ( parse_addr_filter(ctx, POLICY_REMOTE | POLICY_ADDR, FILTERACT_WARN,
+                                                     optarg) < 0 ) {
+                                     ERROR("Invalid address for warn-address\n");
+                                     exit(EXIT_FAILURE);
+                             }
+                             break;
+                      case 'W' :
+                             if ( parse_port_filter( ctx, POLICY_REMOTE | POLICY_PORT, FILTERACT_WARN,
+                                                     optarg) < 0 ) {
+                                     ERROR("Invalid port for warn-port\n");
+                                     exit(EXIT_FAILURE);
                              }
                              break;
                       default :

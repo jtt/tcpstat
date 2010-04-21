@@ -55,6 +55,30 @@
 #include "pidscout.h" /* need to dereference pidinfo pointer */
 #include "printout_curses.h"
 
+/*
+ * Symbols shown on UI for some connection situations.
+ */
+/**
+ * Dead (lingering) connection
+ */
+#define SYMBOL_DEAD '#'
+/**
+ * Connection state has changed
+ */
+#define SYMBOL_NEW_STATE '*'
+/**
+ * New connection.
+ */
+#define SYMBOL_NEW '+'
+/**
+ * Warning about the connection requested.
+ */
+#define SYMBOL_WARN '!'
+/*
+ * default symbol shown
+ */
+#define SYMBOL_DEFAULT ' ' 
+
 /**
  * Table holding the string representations of enum tcp_state.
  */
@@ -272,6 +296,7 @@ static void print_rt_info( struct tcp_connection *conn_p )
 
 
 
+
 /**
  * Print a line containing the connection information. 
  * @ingroup gui_c
@@ -285,16 +310,18 @@ static void gui_print_connection( struct tcp_connection *conn_p )
 
         if ( conn_p->state == TCP_DEAD ) {
                 /* lingering, already dead connection */
-                update_symbol = '#';
+                update_symbol = SYMBOL_DEAD;
                 attron( A_DIM );
         } else if ( metadata_is_state_changed( conn_p->metadata ) ){
-                update_symbol = '*';
+                update_symbol = SYMBOL_NEW_STATE;
                 //attron( A_UNDERLINE );
         }  else if ( metadata_is_new( conn_p->metadata ) ) {
-                update_symbol = '+';
+                update_symbol = SYMBOL_NEW;
                 attron( A_STANDOUT );
+        } else if ( metadata_is_warn( conn_p->metadata)) {
+                update_symbol = SYMBOL_WARN;
         } else {
-                update_symbol = ' ';
+                update_symbol = SYMBOL_DEFAULT;
         }
 
         add_to_linebuf( "%c %4s   ",update_symbol, 
