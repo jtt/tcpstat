@@ -453,6 +453,16 @@ void do_sighandler( _UNUSED int sig )
         exit( 0 );
 }
 
+/**
+ * Print error message to user (before we have initialized any UI.
+ *
+ * @param msg The message to print.
+ */
+static void print_user_error( char *msg )
+{
+        fprintf( stderr, "ERROR: %s\n", msg );
+}
+
 
 /**
  * Handle command line arguments. 
@@ -523,6 +533,7 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
 
                       case 'g' :
                              if ( set_grouping( ctx, optarg ) != 0 ) {
+                                     print_user_error("Unknown grouping specified");
                                      mem_free( ctx );
                                      exit( EXIT_FAILURE );
                              }
@@ -530,11 +541,15 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
 
                       case 'd' :
                              ctx->update_interval = strtol( optarg, NULL, 10 );
+                             if ( ctx->update_interval <= 0 ) {
+                                     print_user_error( "Invalid value for update interval");
+                                     exit( EXIT_FAILURE);
+                             }
                              TRACE( "Update interval set to %d sec.\n", ctx->update_interval );
                              break;
                       case 'p' :
                              if (parse_pids( ctx, optarg) < 1 ) {
-                                     ERROR( "Unable to parse process ID's\n");
+                                     print_user_error( "Unable to parse process ID's");
                                      exit( EXIT_FAILURE );
                              }
                              OPERATION_ENABLE(ctx, OP_FOLLOW_PID);
@@ -542,28 +557,28 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                       case 'R' :
                              if ( parse_port_filter( ctx, POLICY_REMOTE | POLICY_PORT, FILTERACT_IGNORE, 
                                                      optarg ) < 0 ) {
-                                    ERROR(" Unable to create filter!\n");
-                                   exit( EXIT_FAILURE );
+                                    print_user_error("Invalid port for ignore-port");
+                                    exit( EXIT_FAILURE );
                              }
                              break;
                       case 'A' :
                              if ( parse_addr_filter( ctx, POLICY_REMOTE | POLICY_ADDR, FILTERACT_IGNORE,
                                                      optarg ) < 0 ) {
-                                     ERROR("Invalid address for ignore-address\n" );
+                                     print_user_error("Invalid address for ignore-address" );
                                      exit( EXIT_FAILURE );
                              }
                              break;
                       case 'w' :
                              if ( parse_addr_filter(ctx, POLICY_REMOTE | POLICY_ADDR, FILTERACT_WARN,
                                                      optarg) < 0 ) {
-                                     ERROR("Invalid address for warn-address\n");
+                                     print_user_error("Invalid address for warn-address");
                                      exit(EXIT_FAILURE);
                              }
                              break;
                       case 'W' :
                              if ( parse_port_filter( ctx, POLICY_REMOTE | POLICY_PORT, FILTERACT_WARN,
                                                      optarg) < 0 ) {
-                                     ERROR("Invalid port for warn-port\n");
+                                     print_user_error("Invalid port for warn-port");
                                      exit(EXIT_FAILURE);
                              }
                              break;
