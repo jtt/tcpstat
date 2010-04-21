@@ -482,3 +482,26 @@ enum filter_action filtlist_action_for( struct filter_list *list,
 
         return rv;
 }
+
+/**
+ * Set the remote address parameter for the filter.
+ *
+ * @param filt The filter where the address is to be set.
+ * @param addr Pointer to the address to set.
+ * @return 0 if address was set succesfully, -1 if the address lenght could
+ * not be deduced. 
+ */
+int filter_set_raddr( struct filter *filt, struct sockaddr_storage *addr )
+{
+        size_t addrlen; 
+
+        if ( addr->ss_family == AF_INET ) 
+                addrlen = sizeof( struct sockaddr_in );
+        else if ( addr->ss_family == AF_INET6 )
+                addrlen = sizeof( struct sockaddr_in6 );
+        else
+                return -1;
+
+        memcpy( &filt->raddr, addr, addrlen );
+        return 0;
+}

@@ -283,6 +283,8 @@ static int parse_port_value( char *str, in_port_t *port)
 /** 
  * @brief Create a set of filters which will filter on ports specified on given string. 
  * The string should contain the number of ports separated by commas.
+ *
+ * @bug Adds only filter for AF_INET
  * 
  * @param ctx Pointer to the local context.
  * @param policy Policy to set to the filter.
@@ -297,6 +299,7 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
         char *str_p;
         struct filter *filt;
         in_port_t port;
+        struct sockaddr_in sin;
 
         if ( ! argstr || strlen( argstr ) == 0 ) 
                 return -1;
@@ -308,10 +311,13 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
                 }
 
                 filt = filter_init( policy, act, 1 );
+                memset( &sin, 0, sizeof(sin));
+
+                sin.sin_family = AF_INET;
+                sin.sin_port = htons(port);
 
                 TRACE("Adding filtering for port %d \n", port );
-                ((struct sockaddr_in *)&filt->raddr)->sin_port = htons(port);
-                filt->raddr.ss_family = AF_INET; /* XXX */
+                filter_set_raddr( filt, (struct sockaddr_storage *)&sin );
 
                 filtlist_add( ctx->filters, filt, ADD_LAST);
                 str_p = strtok(NULL,",");
@@ -357,7 +363,6 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
                         portstr = NULL;
         }
 
-
         ret = getaddrinfo( argstr, portstr, NULL, &ainfo );
         if ( ret != 0 ) {
                 WARN("Unable to resolve the filter address");
@@ -373,7 +378,7 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
         while ( ait != NULL ) {
                 filt = filter_init( policy, act, 1 );
                 DBG("Got address with family %s \n", ait->ai_family == AF_INET ? "INET" : "INET6" );
-                memcpy( &filt->raddr, ait->ai_addr, ait->ai_addrlen );
+                filter_set_raddr( filt, (struct sockaddr_storage *)(ait->ai_addr));
                 filtlist_add( ctx->filters, filt, ADD_LAST );
 
                 ait = ait->ai_next;

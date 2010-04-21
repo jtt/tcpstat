@@ -194,6 +194,8 @@ struct filter *filter_from_connection( struct tcp_connection *conn_p,
 int filter_match( struct filter *filt, struct tcp_connection *conn_p );
 int filter_has_policy( struct filter *filt, policy_flags_t flags );
 int filter_get_connection_count( struct filter *filt );
+int filter_set_raddr( struct filter *filt, struct sockaddr_storage *addr );
+int filter_set_rport( struct filter *filt, in_port_t port, int family );
 
 struct filter_list *filtlist_init( enum filtlist_policy policy );
 void filtlist_deinit( struct filter_list *list );
