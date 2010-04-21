@@ -845,12 +845,7 @@ uint16_t connection_get_port( struct tcp_connection *conn, int local )
         } else {
                 ssp = &conn->raddr;
         }
-
-        if ( ssp->ss_family == AF_INET ) {
-                rv = ((struct sockaddr_in *)ssp)->sin_port;
-        } else {
-                rv = ((struct sockaddr_in6 *)ssp)->sin6_port;
-        }
+        rv = ss_get_port(ssp);
 
         return ntohs(rv);
 }
@@ -958,4 +953,24 @@ struct in6_addr *ss_get_addr6( struct sockaddr_storage *ss)
 
         ret = &((struct sockaddr_in6 *)ss)->sin6_addr;
         return ret;
+}
+
+/**
+ * Get the port number from sockaddr_storage struct.
+ *
+ * @param ss The sockaddr_storage where the port should be read.
+ * @return The port number from the sockaddr_storage struct without any byte order
+ * conversions. 
+ */
+in_port_t ss_get_port( struct sockaddr_storage *ss)
+{
+        in_port_t port;
+
+        if ( ss->ss_family == AF_INET ) {
+                port = ((struct sockaddr_in *)ss)->sin_port;
+        } else {
+                port = ((struct sockaddr_in6 *)ss)->sin6_port;
+        }
+
+        return port;
 }

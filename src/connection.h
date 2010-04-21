@@ -248,6 +248,7 @@ int is_v6addr_v4mapped( struct sockaddr_in6 *sin6 );
 
 struct in6_addr *ss_get_addr6( struct sockaddr_storage *ss);
 struct in_addr *ss_get_addr( struct sockaddr_storage *ss );
+in_port_t ss_get_port( struct sockaddr_storage *ss);
 
 
 /* Function prototypes for the connection hash table */

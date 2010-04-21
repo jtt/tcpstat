@@ -175,7 +175,7 @@ static int match_saddr( struct sockaddr_storage *filt_addr,
                 struct sockaddr_storage *conn_addr, policy_flags_t pol )
 {
         int rv = 0;
-        int port1, port2;
+        in_port_t port1, port2;
 
         if ( (pol & ( POLICY_ADDR | POLICY_PORT )) == 0 ) {
                 TRACE( "Match, no addr or port on policy \n" );
@@ -217,16 +217,8 @@ static int match_saddr( struct sockaddr_storage *filt_addr,
                         break;
                 case POLICY_PORT :
                         TRACE("Matching port\n" );
-                        if ( filt_addr->ss_family == AF_INET ) {
-                                port1 = ((struct sockaddr_in *)filt_addr)->sin_port;
-                        } else {
-                                port1 = ((struct sockaddr_in6 *)filt_addr)->sin6_port;
-                        }
-                        if ( conn_addr->ss_family == AF_INET ) {
-                                port2 = ((struct sockaddr_in *)conn_addr)->sin_port;
-                        } else {
-                                port2 = ((struct sockaddr_in6 *)conn_addr)->sin6_port;
-                        }
+                        port1 = ss_get_port(filt_addr);
+                        port2 = ss_get_port(conn_addr);
 
                         if ( port1 == port2 ) 
                                 rv = 1;
