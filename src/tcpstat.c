@@ -172,10 +172,10 @@ static void print_help( char *name  )
         printf( "\t--ipv4 or -4    : Collect only IPv4 TCP connection statistics\n" ); 
         printf( "\t--ipv6 or -6    : Collect only IPv6 TCP connection statistics\n" ); 
         printf( "\tFiltering options : \n");
-        printf( "\t--ignore-rport <port>[,<port>,<port>] : Ignore connections with given remote port(s)\n" );
-        printf( "\t--ignore-raddr <addr> : Ignore connections with given remote address\n" );
-        printf( "\t--warn-raddr <addr> : Warn about (mark with !) connections with given remote address\n" );
-        printf( "\t--warn-rport <port>[,<port>,<port>] : Warn (mark with !) about connections with given remote port(s)\n");
+        printf( "\t--ignore-rport <port>[,<port>,<port>] : Ignore connections with given\n\t  remote port(s)\n" );
+        printf( "\t--ignore-raddr <addr>[:port] : Ignore connections with given remote\n\t  address (and port)\n" );
+        printf( "\t--warn-raddr <addr>[:port] : Warn about (mark with !) connections with\n\t  given remote address (and port)\n" );
+        printf( "\t--warn-rport <port>[,<port>,<port>] : Warn (mark with !) about\n\t  connections with given  remote port(s)\n");
 #ifdef DEBUG
         printf( "\t--debug <lvl> or -D <lvl> : Set debug level (0,1,2,3)\n" );
 #endif /* DEBUG */
@@ -253,6 +253,33 @@ static int parse_pids( struct stat_context *ctx, char *argstr )
         return count;
 }
 
+/**
+ * Parse a value for port from given string. 
+ *
+ * Some checks are made to make sure the value is valid.
+ *
+ * @param str Pointer to the string from where the value is to be parsed.
+ * @param port Pointer where the parsed port value is set.
+ * @return -1 if error occurs while parsing the port value, 0 on success.
+ */
+static int parse_port_value( char *str, in_port_t *port) 
+{
+        long val;
+
+        val = strtol( str, NULL, 10 );
+        if (( errno == ERANGE || (errno != 0 && val == 0 ))) {
+                return -1;
+        }
+
+        if ( val < 0 || val > 0xFFFF ) {
+                WARN("Invalid value for port %d \n", val );
+                return -1;
+        }
+
+        *port = (in_port_t)val;
+        return 0;
+}
+
 /** 
  * @brief Create a set of filters which will filter on ports specified on given string. 
  * The string should contain the number of ports separated by commas.
@@ -269,14 +296,17 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
 {
         char *str_p;
         struct filter *filt;
-        int port; 
+        in_port_t port;
 
         if ( ! argstr || strlen( argstr ) == 0 ) 
                 return -1;
 
         str_p = strtok(argstr,",");
         while( str_p != NULL ) {
-                port = strtol( str_p, NULL, 10 );
+                if ( parse_port_value(str_p, &port) != 0 ) {
+                        return -1;
+                }
+
                 filt = filter_init( policy, act, 1 );
 
                 TRACE("Adding filtering for port %d \n", port );
@@ -293,12 +323,17 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
 /** 
  * @brief Create a filter which will filter on address given as argument. 
  *
- * The policy and action for the filter are set as given.
+ * The string given as parameter can either contain only address or
+ * address followed by ':' and port number or service name. 
+ *
+ * The policy should not contain POLICY_ADDR or POLICY_PORT, those 
+ * will be set by the function depending on if port information was
+ * submitted.
  *
  * @param ctx Pointer to the global context.
  * @param policy Policy to set for the filter.
  * @param act Action to set for the filter.
- * @param argstr String containing the (IPv4) address to filter.
+ * @param argstr String containing the address or address and port to filter.
  * 
  * @return 0 on success, -1 on error.
  */
@@ -306,23 +341,34 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
                 enum filter_action act, char *argstr )
 {
         struct filter *filt;
-#if 0
-        struct sockaddr_in *sin_p;
-        struct sockaddr_in6 *sin6_p;
-#endif 
         struct addrinfo *ainfo, *ait;
         int ret;
+        char *portstr = NULL;
 
         if ( !argstr || strlen( argstr ) == 0 ) 
                 return -1;
 
-        ret = getaddrinfo( argstr, NULL, NULL, &ainfo );
+        /* check for <addr>:<port> */
+        portstr = strchr( argstr, ':');
+        if ( portstr != NULL ) {
+                *portstr = '\0'; /* XXX are we allowed to modify this */
+                portstr++;
+                if ( *portstr == '\0' )  /* check for "<addr>:" */
+                        portstr = NULL;
+        }
+
+
+        ret = getaddrinfo( argstr, portstr, NULL, &ainfo );
         if ( ret != 0 ) {
                 WARN("Unable to resolve the filter address");
                 return -1;
         }
 
         ait = ainfo;
+        if ( portstr != NULL ) 
+                policy = policy | POLICY_ADDR | POLICY_PORT;
+        else
+                policy = policy | POLICY_ADDR;
 
         while ( ait != NULL ) {
                 filt = filter_init( policy, act, 1 );
@@ -334,38 +380,8 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
         }
 
         freeaddrinfo( ainfo );
-
-#if 0
-        sin_p = (struct sockaddr_in *) &filt->raddr;
-        ret = inet_pton( AF_INET, argstr, &sin_p->sin_addr );
-        if ( ret > 0 ) { 
-                sin_p->sin_family = AF_INET;
-                sin_p->sin_port = 0;
-        } else {
-               DBG("Not IPv4 Address, trying IPv6\n");
-               sin6_p = (struct sockaddr_in6 *) &filt->raddr;
-               ret = inet_pton( AF_INET6, argstr, &sin6_p->sin6_addr );
-               if ( ret <= 0 ) {
-                       WARN("Given address is neither IPv4 nor IPv6\n");
-                       mem_free( filt );
-                       return -1;
-               }
-               sin6_p->sin6_family = AF_INET6;
-               sin6_p->sin6_port = 0;
-        }
-
-        filtlist_add( ctx->filters, filt, ADD_LAST );
-#endif
-
         return 0;
 }
-
-
-
-        
-
-
-
 
 /** 
  * @brief Do graceful exit of the program.
