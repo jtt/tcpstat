@@ -551,7 +551,7 @@ void main_print_help()
  * 
  * @return -1 on error, 0 on success.
  */
-int init_main_view( struct stat_context *ctx )
+int init_main_view( _UNUSED struct stat_context *ctx )
 {
         gui_set_current_view( MAIN_VIEW );
         return 0;

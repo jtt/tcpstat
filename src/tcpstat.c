@@ -422,7 +422,12 @@ void do_exit( struct stat_context *ctx, char *exit_msg )
  *
  * @param sig Signal received.
  */
+#ifdef DEBUG
 void do_sighandler( int sig ) 
+#else 
+void do_sighandler( _UNUSED int sig ) 
+#endif
+
 {
         ERROR( "Exiting on signal %d \n", sig );
 

@@ -99,6 +99,12 @@ enum dbg_module {
  */
 #define IFNAMEMAX 20
 
+/**
+ * Can be used to mark unused parameters in function declaration
+ * to silence the compiler.
+ */
+#define _UNUSED __attribute__((unused))
+
 
 
 #endif /* _DEFS_H_ */

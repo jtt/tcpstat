@@ -61,7 +61,7 @@
  * 
  * @return  0.
  */
-int init_help_view( struct stat_context *ctx )
+int init_help_view( _UNUSED struct stat_context *ctx )
 {
         TRACE("Initializing help view\n");
         if ( gui_get_current_view() == HELP_VIEW ) 
@@ -131,7 +131,7 @@ static void print_generic_help()
  * 
  * @return 0.
  */
-int help_update( struct stat_context *ctx )
+int help_update( _UNUSED struct stat_context *ctx )
 {
 
         attron( A_REVERSE );

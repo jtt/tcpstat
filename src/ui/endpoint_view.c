@@ -200,7 +200,7 @@ int endpoint_update( struct stat_context *ctx )
  * 
  * @return 0 if the key did not match any command, 1 if it did.
  */
-int endpoint_input( struct stat_context *ctx, int key )
+int endpoint_input( _UNUSED struct stat_context *ctx, _UNUSED int key )
 {
         /* no commands for endpoint view */
         return 0;
