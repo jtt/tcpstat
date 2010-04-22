@@ -567,14 +567,14 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                              }
                              break;
                       case 'A' :
-                             if ( parse_addr_filter( ctx, POLICY_REMOTE | POLICY_ADDR, FILTERACT_IGNORE,
+                             if ( parse_addr_filter( ctx, POLICY_REMOTE, FILTERACT_IGNORE,
                                                      optarg ) < 0 ) {
                                      print_user_error("Invalid address for ignore-address" );
                                      exit( EXIT_FAILURE );
                              }
                              break;
                       case 'w' :
-                             if ( parse_addr_filter(ctx, POLICY_REMOTE | POLICY_ADDR, FILTERACT_WARN,
+                             if ( parse_addr_filter(ctx, POLICY_REMOTE, FILTERACT_WARN,
                                                      optarg) < 0 ) {
                                      print_user_error("Invalid address for warn-address");
                                      exit(EXIT_FAILURE);
