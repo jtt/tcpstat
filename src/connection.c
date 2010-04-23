@@ -817,12 +817,15 @@ int connection_resolve( struct tcp_connection *conn_p )
  */
 int is_v6addr_v4mapped( struct sockaddr_in6 *sin6 )
 {
+        return IN6_IS_ADDR_V4MAPPED( &sin6->sin6_addr );
+#if 0
 	int rv = 0;
 	if ( sin6->sin6_addr.s6_addr32[0] == 0 && sin6->sin6_addr.s6_addr32[1] == 0 
 			&& ntohl(sin6->sin6_addr.s6_addr32[2]) == 0xffff ) {
 		rv = 1;
 	}
 	return rv;
+#endif 
 }
 
 /** 
@@ -900,7 +903,7 @@ int connection_do_addrstrings( struct tcp_connection *conn_p )
         } else {
                 struct in6_addr *addr = ss_get_addr6( &conn_p->laddr);
 
-                if ( IN6_IS_ADDR_UNSPECIFIED( addr->s6_addr ) ) {
+                if ( IN6_IS_ADDR_UNSPECIFIED(addr) ) {
                         strncpy( meta_p->laddr_string, ANY_ADDRSTR, ADDRSTR_BUFLEN );
                 } else {
 
