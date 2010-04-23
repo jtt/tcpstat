@@ -255,6 +255,7 @@ uint16_t connection_get_port( struct tcp_connection *conn, int local );
 struct in6_addr *ss_get_addr6( struct sockaddr_storage *ss);
 struct in_addr *ss_get_addr( struct sockaddr_storage *ss );
 in_port_t ss_get_port( struct sockaddr_storage *ss);
+in_addr_t sin6_get_v4addr( struct sockaddr_in6 *sin6 );
 
 
 /* Function prototypes for the connection hash table */

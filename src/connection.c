@@ -775,9 +775,7 @@ int connection_resolve( struct tcp_connection *conn_p )
 			/* v4 mapped ipv6 address, try to get the host name by
 			 * using the v4 address. Is ugly, but seems to work.
 			 */
-			DBG( "We have v4 mapped v6 address, should do something\n" );
-			//dummy.s_addr = ntohl(((struct sockaddr_in6 *)&(conn_p->raddr))->sin6_addr.s6_addr32[3]);
-			dummy.s_addr = ((struct sockaddr_in6 *)&(conn_p->raddr))->sin6_addr.s6_addr32[3];
+			dummy.s_addr = sin6_get_v4addr((struct sockaddr_in6 *)&(conn_p->raddr));
 			addr_p = &dummy;
 			TRACE( "v4 mapped, trying 0x%x\n", dummy.s_addr );
 			len = sizeof( struct in_addr );
@@ -958,3 +956,22 @@ in_port_t ss_get_port( struct sockaddr_storage *ss)
 
         return port;
 }
+
+/**
+ * Get the IPv4 address from IPv6 mapped IPv4 address. 
+ *
+ * The byte order of the returned address is not changed.
+ * @param sin6 Pointer to the address from where the v4 address should be read.
+ * @return The IPv4 address that was mapped. 
+ */
+in_addr_t sin6_get_v4addr( struct sockaddr_in6 *sin6 )
+{
+        in_addr_t ret; 
+        struct in6_addr *addr = &(sin6->sin6_addr);
+
+        ret = ((uint32_t *) addr)[3];
+
+        return ret;
+}
+
+
