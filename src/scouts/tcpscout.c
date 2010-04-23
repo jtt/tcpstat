@@ -120,6 +120,7 @@ static int token_to_addr6( struct line_token *token, struct sockaddr_storage *ad
         struct sockaddr_in6 *addrin_p;
         int rv = 0;
         int i;
+        uint32_t *bufp;
 
         if ( ptr == NULL ) {
                 WARN( "Not valid IPv6 address and port on token\n" );
@@ -129,14 +130,25 @@ static int token_to_addr6( struct line_token *token, struct sockaddr_storage *ad
         port = ptr + 1;
         *ptr = '\0';
 
-        addrin_p = (struct sockaddr_in6 *)addr_p;
-        /* XXX len */
         str2bytes( token->token, buffer, &len );
-        /* XXX Do we need to order bytes with IPv6 addresses.. */
-        memcpy( &(addrin_p->sin6_addr.s6_addr), buffer, 16 );
-        for ( i = 0; i < 4; i++ ) {
-                addrin_p->sin6_addr.s6_addr32[i] = htonl( addrin_p->sin6_addr.s6_addr32[i]);
+        if ( len != 16 ) {
+                WARN("Malformed IPv6 address in tcp6 stats\n");
+                return -1;
         }
+
+        /* The IPv6 address in /proc/net/tcp6 is printed as 4 32bit parts, each
+         * part being in host byte order. Hence (for little endian platforms,
+         * anyway) we have to walk through the address in 32bit chunks and
+         * switch their byte order. 
+         */
+        bufp = (uint32_t *)buffer;
+        for ( i = 0; i < 4; i++ ) {
+                *bufp = htonl(*bufp);
+                bufp++;
+        }
+
+        addrin_p = (struct sockaddr_in6 *)addr_p;
+        memcpy( &(addrin_p->sin6_addr.s6_addr), buffer, 16 );
         addrin_p->sin6_family = AF_INET6;
         addrin_p->sin6_port = htons( (uint16_t)strtol( port, NULL, 16));
 
