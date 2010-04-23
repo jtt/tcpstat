@@ -81,11 +81,6 @@
  */
 #define IF_COUNT_START 4
 
-/* this is in connection.c, but don't want to include connection.h.
- * ugly? yes. Watch me not care.
- */
-extern int is_v6addr_v4mapped( struct sockaddr_in6 *sin6 );
-
 /* forward declaration */
 static void read_interface_v6addrs( struct ifinfo_tab *tab );
 
@@ -216,7 +211,7 @@ static int compare_ifinfo_addr( struct ifinfo_addr *iaddr,
                 /* check if the given address is v4 mapped */
                 if ( iaddr->family == AF_INET && 
                         addr_p->ss_family == AF_INET6 &&
-                        is_v6addr_v4mapped( (struct sockaddr_in6 *)addr_p) ){
+                        IN6_IS_ADDR_V4MAPPED(ss_get_addr6(addr_p))) {
 
                         saddr6 = (struct sockaddr_in6 *)addr_p;
                         TRACE("Comparing (iaddr) %.4x to %.4x\n", iaddr->ifinfo_v4addr.s_addr,

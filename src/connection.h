@@ -251,7 +251,6 @@ void connection_deinit( struct tcp_connection *con_p );
 int connection_resolve( struct tcp_connection *conn_p );
 int connection_do_addrstrings( struct tcp_connection *con_p );
 uint16_t connection_get_port( struct tcp_connection *conn, int local );
-int is_v6addr_v4mapped( struct sockaddr_in6 *sin6 );
 
 struct in6_addr *ss_get_addr6( struct sockaddr_storage *ss);
 struct in_addr *ss_get_addr( struct sockaddr_storage *ss );

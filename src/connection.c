@@ -771,7 +771,7 @@ int connection_resolve( struct tcp_connection *conn_p )
                         return 0;
 
         } else {
-		if ( is_v6addr_v4mapped( (struct sockaddr_in6 *)&(conn_p->raddr) )) {
+                if ( IN6_IS_ADDR_V4MAPPED(ss_get_addr6( &conn_p->raddr))) {
 			/* v4 mapped ipv6 address, try to get the host name by
 			 * using the v4 address. Is ugly, but seems to work.
 			 */
@@ -807,25 +807,6 @@ int connection_resolve( struct tcp_connection *conn_p )
         TRACE( "Exit2; flags 0x%.2x\n",meta_p->flags );
 
         return 0;
-}
-
-/**
- * @brief Check if given IPv6 address is v4 address mapped to IPv6 address. 
- *
- * @param sin6 Pointer to sockaddr_in6 struct which contains the address to check.
- * @return 0 if address is not v4 mapped addres, 1 if it is.
- */
-int is_v6addr_v4mapped( struct sockaddr_in6 *sin6 )
-{
-        return IN6_IS_ADDR_V4MAPPED( &sin6->sin6_addr );
-#if 0
-	int rv = 0;
-	if ( sin6->sin6_addr.s6_addr32[0] == 0 && sin6->sin6_addr.s6_addr32[1] == 0 
-			&& ntohl(sin6->sin6_addr.s6_addr32[2]) == 0xffff ) {
-		rv = 1;
-	}
-	return rv;
-#endif 
 }
 
 /** 
