@@ -33,6 +33,9 @@
  *
  *
  */ 
+#ifdef ENABLE_FOLLOW_PID
+#ifndef _PIDSCOUT_H_
+#define _PIDSCOUT_H_
 
 /**
  * Maximum length for commandline read from /proc/&lt;pid&gt;/cmdline
@@ -58,3 +61,5 @@ void scan_cmdline( struct pidinfo *info_p );
 void free_pidinfo( struct pidinfo *info_p );
 struct pidinfo *init_pidinfo( int pid );
 struct pidinfo *get_pidinfo_by_inode( ino_t inode, struct pidinfo *info_p );
+#endif /* _PIDSCOUT_H_ */
+#endif /* ENABLE_FOLLOW_PID */

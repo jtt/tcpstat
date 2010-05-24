@@ -86,6 +86,7 @@ static char progname[ PROGNAMELEN ];
  * 
  * @return Number of still alive connections. 
  */
+#ifdef ENABLE_FOLLOW_PID
 static int check_dead_processes( struct stat_context *ctx )
 {
         struct pidinfo *info_p, *prev;
@@ -123,7 +124,9 @@ static int check_dead_processes( struct stat_context *ctx )
         }
         return alive_count;
 }
+#endif /* ENABLE_FOLLOW_PID */
 
+#ifdef ENABLE_FOLLOW_PID
 /**
  * Clear the metadata from the connections stored into pidinfo 
  * structures. 
@@ -142,14 +145,15 @@ static void clear_pid_metadata( struct stat_context *ctx )
                 info_p = info_p->next;
         }
 }
+#endif /* ENABLE_FOLLOW_PID */
 
         
 static void print_help( char *name  )
 {
 #ifdef BUILDID
-        printf( "%s %s Build:%s (c) J. Taimisto 2005-2008 \n", name, VERSION, BUILDID );
+        printf( "%s %s Build:%s (c) J. Taimisto 2005-2010 \n", name, VERSION, BUILDID );
 #else
-        printf( "%s %s (c) J. Taimisto 2005-2008 \n", name, VERSION );
+        printf( "%s %s (c) J. Taimisto 2005-2010 \n", name, VERSION );
 #endif /* BUILDID */
         printf( "Usage %s [options], where options are: \n",name );
         printf( "\t--help or -h:\t Print this text \n" );
@@ -163,12 +167,16 @@ static void print_help( char *name  )
         printf( "\t   \"cloud\" -- Group related connections (based on address) (EXPERIMENTAL)\n");
         printf( "\t   \"cloudp\"-- Group related connections (based on port) (EXPERIMENTAL)\n\n"); 
 #endif 
+#ifdef ENABLE_FOLLOW_PID
         printf( "\t--pid <pid> or -p <pid> : Show only connection for process\n\t  with pid <pid>\n" );
+#endif /* ENABLE_FOLLOW_PID */
         printf( "\t--delay <sec> or -d <sec> : Set delay betveen updates to \n\t  <sec> seconds. Default is %d sec\n",DEFAULT_UPDATE_INT );
         printf( "\t--numeric or -n : Don't resolve hostnames\n" );
         printf( "\t--listen or -l  : Print information about listening connections\n" );
         printf( "\t--linger or -L  : Linger closed connections for a while\n" );
+#ifdef ENABLE_IFSTATS
         printf( "\t--ifstat or -i  : Collect and display interface statistics\n");
+#endif /* ENABLE_IFSTATS */
         printf( "\t--ipv4 or -4    : Collect only IPv4 TCP connection statistics\n" ); 
         printf( "\t--ipv6 or -6    : Collect only IPv6 TCP connection statistics\n" ); 
         printf( "\tFiltering options : \n");
@@ -226,6 +234,7 @@ static int set_grouping( struct stat_context *ctx, char *modifier )
  * @param argstr String containing the PIDs.
  * @return number of PIDs found.
  */
+#ifdef ENABLE_FOLLOW_PID
 static int parse_pids( struct stat_context *ctx, char *argstr )
 {
         char *str_p;
@@ -252,6 +261,7 @@ static int parse_pids( struct stat_context *ctx, char *argstr )
 
         return count;
 }
+#endif /* ENABLE_FOLLOW_PID */
 
 /**
  * Parse a value for port from given string. 
@@ -398,7 +408,9 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
  */
 void do_exit( struct stat_context *ctx, char *exit_msg )
 {
+#ifdef ENABLE_FOLLOW_PID
         struct pidinfo *info_p;
+#endif /* ENABLE_FOLLOW_PID */
 
         DBG( "Exiting!\n" );
         ui_deinit();
@@ -410,12 +422,14 @@ void do_exit( struct stat_context *ctx, char *exit_msg )
          */
         chash_clear( ctx->chash );
         /* Free all pidinfo structures */
+#ifdef ENABLE_FOLLOW_PID
         info_p = ctx->pinfo;
         while (info_p != NULL ) {
                 struct pidinfo *tmp = info_p->next;
                 free_pidinfo( info_p );
                 info_p = tmp;
         }
+#endif /* ENABLE_FOLLOW_PID */
         filtlist_deinit( ctx->filters );
 
         cqueue_deinit( ctx->newq, 1 );
@@ -521,9 +535,11 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                       case 'L' :
                              OPERATION_ENABLE(ctx,OP_LINGER);
                              break;
+#ifdef ENABLE_IFSTATS
                       case 'i' :
                              OPERATION_ENABLE(ctx, OP_IFSTATS);
                              break;
+#endif /* ENABLE_IFSTATS */
                       case '4' :
                              ctx->collected_stats = STAT_V4_ONLY;
                              break;
@@ -552,6 +568,7 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                              }
                              TRACE( "Update interval set to %d sec.\n", ctx->update_interval );
                              break;
+#ifdef ENABLE_FOLLOW_PID
                       case 'p' :
                              if (parse_pids( ctx, optarg) < 1 ) {
                                      print_user_error( "Unable to parse process ID's");
@@ -559,6 +576,7 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                              }
                              OPERATION_ENABLE(ctx, OP_FOLLOW_PID);
                              break;
+#endif /* ENABLE_FOLLOW_PID */
                       case 'R' :
                              if ( parse_port_filter( ctx, POLICY_REMOTE | POLICY_PORT, FILTERACT_IGNORE, 
                                                      optarg ) < 0 ) {
@@ -657,17 +675,23 @@ int main( int argc, char *argv[] )
         }
         DBG( "Scouted %d interfaces\n", ctx->iftab->size );
 
+#ifdef ENABLE_ROUTES
         DBG("Adding routing info\n");
         parse_routing_info(ctx->iftab);
+#endif /* ENABLE_ROUTES */
 
 
         ui_init( ctx );
         while ( 1 )  {
+#ifdef ENABLE_FOLLOW_PID
                 if ( OPERATION_ENABLED(ctx,OP_FOLLOW_PID) ) 
                         scan_inodes( ctx->pinfo );
+#endif /* ENABLE_FOLLOW_PID */
 
+#ifdef ENABLE_IFSTATS
                 if ( OPERATION_ENABLED(ctx, OP_IFSTATS ))
                         read_interface_stat( ctx );
+#endif /* ENABLE_IFSTATS */
                 
                 if ( ctx->collected_stats != STAT_V4_ONLY ) {
                         rv = read_tcp6_stat( ctx );
@@ -684,9 +708,13 @@ int main( int argc, char *argv[] )
                         }
                 }
 
+#ifdef ENABLE_FOLLOW_PID
                 if ( ! OPERATION_ENABLED(ctx, OP_FOLLOW_PID)) {
                         rotate_new_queue( ctx );
                 }
+#else
+                rotate_new_queue(ctx);
+#endif /* ENABLE_FOLLOW_PID */
                 round++;
 
                 if ( ctx->total_count != ctx->chash->size ) {
@@ -700,24 +728,31 @@ int main( int argc, char *argv[] )
                                 }
                         }
                 }  
+#ifdef ENABLE_FOLLOW_PID
                 if ( OPERATION_ENABLED( ctx, OP_FOLLOW_PID) ) {
                         if ( check_dead_processes( ctx ) == 0 ) {
                                 /* XXX - Some message is needed */
                                 do_exit( ctx, "No more processes to follow!\n" );
                         }
                 }
+#endif /* ENABLE_FOLLOW_PID */
                 ui_update_view( ctx );
 
                 /* clear metadata flags from all the connections, 
                  * this way we'll notice new connections (and dead) 
                  * on next round...
                  */
+#ifdef ENABLE_FOLLOW_PID 
                 if ( OPERATION_ENABLED( ctx, OP_FOLLOW_PID )) {
                         clear_pid_metadata( ctx );
                 } else {
                         clear_metadata_flags( ctx->listen_groups );
                         clear_metadata_flags( ctx->out_groups );
                 }
+#else /* ENABLE_FOLLOW_PID */
+                clear_metadata_flags(ctx->listen_groups);
+                clear_metadata_flags(ctx->out_groups);
+#endif /* ENABLE_FOLLOW_PID */
 
                 /* clear the metadata flags from the filtered connections */
                 filtlist_foreach_filter( ctx->filters, filt ) {

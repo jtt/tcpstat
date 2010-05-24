@@ -114,7 +114,9 @@ void gui_print_banner( struct stat_context *ctx )
 {
         time_t now;
         struct tm *tm_p;
+#ifdef ENABLE_FOLLOW_PID
         struct pidinfo *info_p;
+#endif /* ENABLE_FOLLOW_PID */
 
         //clear(); /* This is the first line to print */
         reset_ctx();
@@ -179,6 +181,7 @@ void gui_print_banner( struct stat_context *ctx )
         if ( OPERATION_ENABLED(ctx,OP_LINGER ) ) 
                 add_to_linebuf( " lingering on" );
         write_linebuf();
+#ifdef ENABLE_FOLLOW_PID
         if ( OPERATION_ENABLED(ctx, OP_FOLLOW_PID) ) {
                 info_p = ctx->pinfo;
                 add_to_linebuf("Following PIDs: ");
@@ -192,6 +195,7 @@ void gui_print_banner( struct stat_context *ctx )
                 }
                 write_linebuf();
         }
+#endif /* ENABLE_FOLLOW_PID */
 
         add_to_linebuf( "Connections:");
         write_linebuf_partial();
@@ -219,6 +223,7 @@ void gui_print_banner( struct stat_context *ctx )
  * @ingroup gui_c
  * @param ctx Pointer to the global context.
  */
+#ifdef ENABLE_IFSTATS
 void gui_print_if_banners( struct stat_context *ctx )
 {
         struct ifinfo *if_p;
@@ -286,6 +291,7 @@ void gui_print_if_banners( struct stat_context *ctx )
 
         }
 }
+#endif /* ENABLE_IFSTATS */
                 
 
 
@@ -334,6 +340,7 @@ void gui_print_out_banner( struct stat_context *ctx )
  * 
  * @param info_p Pointer to struct pidinfo holding information for groups.
  */
+#ifdef ENABLE_FOLLOW_PID
 void gui_print_pid_banner( struct pidinfo *info_p )
 {
         attron( A_REVERSE );
@@ -345,5 +352,6 @@ void gui_print_pid_banner( struct pidinfo *info_p )
         write_linebuf();
         attroff( A_REVERSE );
 }
+#endif /* ENABLE_FOLLOW_PID */
 
 

@@ -33,7 +33,6 @@
  *
  *
  */ 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,6 +50,8 @@
 #include "debug.h"
 #include "connection.h"
 #include "pidscout.h"
+
+#ifdef ENABLE_FOLLOW_PID
 
 #define MAX_PATH_LEN 50
 #define INODETAB_INIT_SIZE 10
@@ -337,4 +338,4 @@ struct pidinfo *get_pidinfo_by_inode( ino_t inode, struct pidinfo *info_p )
         }
         return rv;
 }
-
+#endif /* ENABLE_FOLLOW_PID */

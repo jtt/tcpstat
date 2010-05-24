@@ -38,6 +38,7 @@
 #define _IFSCOUT_H_
 
 
+#ifdef ENABLE_IFSTATS
 /**
  * Structure holding statistics read from <code>/proc/net/dev</code>.
  * @ingroup ifscout_api
@@ -55,6 +56,7 @@ struct if_stat {
         unsigned long long tx_packets_diff;
         time_t stamp; /**< Timestamp when previous data was read */
 };
+#endif /* ENABLE_IFSTATS */
 
 /**
  * Union holdin one IPv6 or one IPv4 address.
@@ -85,8 +87,12 @@ struct ifinfo {
         char ifname[ IFNAMEMAX ]; /**< Name of the interface */
         //uint32_t ifaddr; /**< IP address for the interface */
         struct ifinfo_addr *ifaddr;
+#ifdef ENABLE_IFSTATS
         struct if_stat stats; /**< Last staticstics gathered */
+#endif /* ENABLE_IFSTATS */
+#ifdef ENABLE_ROUTES
         struct rtlist *routes;/**< "Routing" information for this interface */
+#endif /* ENABLE_ROUTES */
 };
 
 /**
@@ -104,6 +110,8 @@ struct ifinfo_tab *scout_ifs( void );
 const char *ifname_for_addr( struct ifinfo_tab *tab_p, struct sockaddr_storage *addr );
 void deinit_ifinfo_tab( struct ifinfo_tab *tab_p );
 struct ifinfo *get_ifinfo_by_name( struct ifinfo_tab *tab, const char *name );
+#ifdef ENABLE_IFSTATS
 void read_interface_stat( struct stat_context *ctx );
+#endif /* ENABLE_IFSTATS */
 int iftab_has_routes( struct ifinfo_tab *tab_p ); 
 #endif /* _IFSCOUT_H_ */

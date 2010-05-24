@@ -105,6 +105,15 @@ enum dbg_module {
  */
 #define _UNUSED __attribute__((unused))
 
+/* 
+ * "features" enabled 
+ */
+/* Scout routes */
+#define ENABLE_ROUTES
+/* follow pid -mode */
+#define ENABLE_FOLLOW_PID
+/* Check for interface stats */
+#define ENABLE_IFSTATS
 
 
 #endif /* _DEFS_H_ */

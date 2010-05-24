@@ -41,7 +41,6 @@
  *
  */ 
 
-
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
@@ -293,8 +292,9 @@ const char *ifname_for_addr( struct ifinfo_tab *tab_p, struct sockaddr_storage *
  */
 int iftab_has_routes( struct ifinfo_tab *tab_p ) 
 {
-        int i;
         int rv = 0;
+#ifdef ENABLE_ROUTES
+        int i;
 
         for ( i = 0; i < tab_p->size; i++ ) {
                 if ( tab_p->ifs[i].routes != NULL ) {
@@ -302,6 +302,7 @@ int iftab_has_routes( struct ifinfo_tab *tab_p )
                         break;
                 }
         }
+#endif /* ENABLE_ROUTES */
 
         return rv;
 }
@@ -353,8 +354,10 @@ void deinit_ifinfo_tab( struct ifinfo_tab *tab_p )
 
         if ( tab_p->ifs ) {
                 for( i= 0; i < tab_p->size; i++ ) {
+#ifdef ENABLE_ROUTES
                         if ( tab_p->ifs[i].routes != NULL ) 
                                 rtlist_deinit( tab_p->ifs[i].routes, 1 );
+#endif /* ENABLE_ROUTES */
 
                         iaddr_p = tab_p->ifs[i].ifaddr;
                         while ( iaddr_p != NULL ) {
@@ -444,7 +447,7 @@ static void read_interface_v6addrs( struct ifinfo_tab *info )
 
         parse_file_per_line( IF6_FILE, 0, parse_v6addresses, info);
 }
-
+#ifdef ENABLE_IFSTATS
 /** 
  * @brief Parse interface statistic for tokenized lines. 
  * This is a callback which should be called for every line read from
@@ -571,4 +574,4 @@ void read_interface_stat( struct stat_context *ctx )
 {
         parse_file_per_line( IFSTAT_FILE, 2, parse_ifstat_data, ctx->iftab );
 }
-
+#endif /* ENABLE_IFSTATS */

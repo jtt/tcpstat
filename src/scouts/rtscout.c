@@ -58,6 +58,7 @@
 #include "ifscout.h"
 #include "rtscout.h"
 
+#ifdef ENABLE_ROUTES
 /**
  * file to read the routes from
  */
@@ -401,4 +402,4 @@ void parse_routing_info( struct ifinfo_tab *ifs )
 {
         parse_file_per_line( IPV4_RT_FILE, 1, parse_rt_v4_data, ifs );
 }
-
+#endif /* ENABLE_ROUTES */

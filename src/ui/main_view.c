@@ -176,9 +176,11 @@ static const char conn_format_narrow_rt[] = "%11.11s";
 static const char port_format[] = ":%-5hu";
 static const char servname_format[] = ":%-5.5s";
 
+#ifdef ENABLE_ROUTES
 static const char via_narrow_format[] = " %6.6s";
 static const char via_wide_format[] = " %19.19s";
 static const char via_wide_format_a[] = " via %15.15s";
+#endif /* ENABLE_ROUTES */
 
 /** 
  * @brief Get the format string which is used to print the connection address information
@@ -271,6 +273,7 @@ static void print_connection_addrs( struct tcp_connection *conn_p )
  * @param conn_p pointer to connection whose routing information should be
  * printed.
  */
+#ifdef ENABLE_ROUTES
 static void print_rt_info( struct tcp_connection *conn_p )
 {
         if ( conn_p->metadata.route == NULL ) {
@@ -293,6 +296,7 @@ static void print_rt_info( struct tcp_connection *conn_p )
                         add_to_linebuf( via_wide_format_a, conn_p->metadata.route->addr_str );
         }
 }
+#endif /* ENABLE_ROUTES */
 
 
 
@@ -327,8 +331,10 @@ static void gui_print_connection( struct tcp_connection *conn_p )
         add_to_linebuf( "%c %4s   ",update_symbol, 
                         conn_p->metadata.ifname?conn_p->metadata.ifname:"N/A");
         print_connection_addrs( conn_p );
+#ifdef ENABLE_ROUTES
         if ( gui_do_routing() )
                 print_rt_info( conn_p );
+#endif /* ENABLE_ROUTES */
 
         write_linebuf_partial();
         add_to_linebuf( " %-12s", conn_state_to_str( conn_p->state ));
@@ -357,6 +363,7 @@ static void print_titlebar()
         add_to_linebuf( " %3s ", "Dir" );
         add_to_linebuf( fmt, "Remote address");
         add_to_linebuf( " %5s", "Port" );
+#ifdef ENABLE_ROUTES
         if ( gui_do_routing() ) {
                 /* XXX : we really should not use numbers here */
                 if ( gui_get_columns() < GUI_COLUMN_RT_WIDE_LIMIT )
@@ -364,6 +371,7 @@ static void print_titlebar()
                 else 
                         add_to_linebuf( via_wide_format, "Route");
         }
+#endif /* ENABLE_ROUTES */
         add_to_linebuf( " %-12s", "State" );
         add_to_linebuf( " %-9s", "Time" );
 
@@ -513,10 +521,12 @@ int main_input( struct stat_context *ctx, int key )
                         if ( gui_get_current_view() == MAIN_VIEW )
                                 switch_grouping( ctx, POLICY_STATE );
                         break;
+#ifdef ENABLE_ROUTES 
                 case 'R' :
                         TRACE("Toggling routing");
                         gui_toggle_routing();
                         break;
+#endif /* ENABLE_ROUTES */
                 default :
                         WARN( "Unkown key pressed %c (%d), ignoring\n",(char)key,key );
                         rv = 0;
@@ -539,10 +549,12 @@ void main_print_help()
         write_linebuf_partial_attr( A_BOLD);
         add_to_linebuf(" Toggle lingering of closed connections");
         write_linebuf();
+#ifdef ENABLE_ROUTES 
         add_to_linebuf(" R  ");
         write_linebuf_partial_attr( A_BOLD);
         add_to_linebuf(" Toggle displaying of routing information");
         write_linebuf();
+#endif /* ENABLE_ROUTES */
         write_linebuf();
         add_to_linebuf("  Commands for switching grouping of outgoing connections");
         write_linebuf();
@@ -595,6 +607,7 @@ int init_main_view( _UNUSED struct stat_context *ctx )
  * 
  * @param ctx Pointer to main context.
  */
+#ifdef ENABLE_FOLLOW_PID
 static void do_print_stat_pids( struct stat_context *ctx )
 {
         struct pidinfo *info_p;
@@ -609,6 +622,7 @@ static void do_print_stat_pids( struct stat_context *ctx )
                 info_p = info_p->next;
         }
 }
+#endif /* ENABLE_FOLLOW_PID */
 /** 
  * @brief Print the information for all connections. 
  * Call relevant gui functions for printing the information, this function does
@@ -650,9 +664,11 @@ static void do_print_stat( struct stat_context *ctx )
 int main_update( struct stat_context *ctx )
 {
 
+#ifdef ENABLE_FOLLOW_PID
         if ( OPERATION_ENABLED(ctx, OP_FOLLOW_PID) )
                 do_print_stat_pids( ctx );
         else
+#endif /* ENABLE_FOLLOW_PID */
                 do_print_stat( ctx );
 
         return 0;

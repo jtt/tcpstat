@@ -109,8 +109,10 @@ void ui_deinit( void )
 void ui_update_view( struct stat_context *ctx )
 {
         gui_print_banner( ctx );
+#ifdef ENABLE_IFSTATS
         if( OPERATION_ENABLED(ctx, OP_IFSTATS) )
                 gui_print_if_banners( ctx );
+#endif /* ENABLE_IFSTATS */
 #ifdef DEBUG
         gui_print_dbg_banner( ctx );
 #endif /* DEBUG */

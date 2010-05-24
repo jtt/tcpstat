@@ -69,7 +69,9 @@ struct conn_metadata {
         enum connection_dir dir; /**< Direction of the connection. */
         uint8_t flags; /**< Metadata flags */
         const char *ifname; /**< Name of the interface, Can be NULL */
+#ifdef ENABLE_FOLLOW_PID
         ino_t inode; /**< Inode number for the local socket(?) */
+#endif /* ENABLE_FOLLOW_PID */
         char rem_hostname[ADDRSTR_BUFLEN]; /**< name of the remote host */
         char rem_servname[ADDRSTR_BUFLEN]; /**< service name from remote port */
         /**
@@ -86,12 +88,14 @@ struct conn_metadata {
          * Number of seconds this connection has been lingering.
          */
         int linger_secs;
+#ifdef ENABLE_ROUTES
         /**
          * Routing information for this connection, NULL if no route 
          * (i.e the connection is within the local net). 
          * NULL also if no routing info is gathered.
          */
         struct rtinfo *route;
+#endif /* ENABLE_ROUTES */
 };
 
 /**

@@ -34,7 +34,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */ 
-
+#ifdef ENABLE_ROUTES 
 #ifndef _RTSCOUT_H_
 #define _RTSCOUT_H_
 
@@ -103,3 +103,4 @@ int rtinfo_is_on_local_net( struct rtinfo *info_p );
 void parse_routing_info( struct ifinfo_tab *ifs );
 
 #endif /* _RTSCOUT_H_ */
+#endif /* ENABLE_ROUTES */

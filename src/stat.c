@@ -71,6 +71,7 @@
  * @param conn_p  Pointer to the connection whose routing information should be printed.
  * 
  */
+#ifdef ENABLE_ROUTES
 void resolve_route_for_connection( struct stat_context *ctx,
                 struct tcp_connection *conn_p)
 {
@@ -91,6 +92,7 @@ void resolve_route_for_connection( struct stat_context *ctx,
         }
         return;
 }
+#endif /* ENABLE_ROUTES */
 
 /** 
  * @brief Add new connection to system.
@@ -108,16 +110,22 @@ void resolve_route_for_connection( struct stat_context *ctx,
  * @param ctx Pointer to the global context.
  */
 static void insert_new_connection( struct tcp_connection *conn_p, 
+#ifdef ENABLE_FOLLOW_PID
                 ino_t inode, struct pidinfo *info_p, 
+#endif /* ENABLE_FOLLOW_PID */
                 struct stat_context *ctx )
 {
 
         /* Fill in the metadata */
         conn_p->metadata.added = time( NULL );  
         metadata_set_flag( conn_p->metadata, METADATA_NEW );
+#ifdef ENABLE_FOLLOW_PID
         conn_p->metadata.inode = inode;
+#endif /* ENABLE_FOLLOW_PID */
         conn_p->metadata.ifname = ifname_for_addr( ctx->iftab, &(conn_p->laddr) );
+#ifdef ENABLE_ROUTES 
         resolve_route_for_connection( ctx, conn_p );
+#endif /* ENABLE_ROUTES */
 
         connection_do_addrstrings( conn_p );
 
@@ -128,6 +136,7 @@ static void insert_new_connection( struct tcp_connection *conn_p,
         if ( metadata_is_ignored( conn_p->metadata ) )
                 return;
 
+#ifdef ENABLE_FOLLOW_PID
         if ( info_p != NULL ) {
                 /* Add the connection to the group on pidinfo struct instead of
                  * pushing it to newq. Also connections on LISTEN state will be
@@ -136,6 +145,7 @@ static void insert_new_connection( struct tcp_connection *conn_p,
                 group_add_connection(info_p->grp, conn_p);
                 return;
         }
+#endif /* ENABLE_FOLLOW_PID */
         if ( conn_p->state == TCP_LISTEN ) {
                 struct filter *filt;
                 /* New listen connection, create group for it. */
@@ -176,12 +186,15 @@ int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_stor
                 enum tcp_state state, ino_t inode, struct stat_context *ctx )
 {
         struct group *grp;
+#ifdef ENABLE_FOLLOW_PID
         struct pidinfo *info_p = NULL;
+#endif /* ENABLE_FOLLOW_PID */
         struct filter *filt;
 
         struct tcp_connection *conn_p = chash_get(ctx->chash, local_addr, remote_addr );
         
         if ( conn_p == NULL ) {
+#ifdef ENABLE_FOLLOW_PID
                 if ( OPERATION_ENABLED(ctx,OP_FOLLOW_PID) ) {
                         info_p = get_pidinfo_by_inode( inode, ctx->pinfo );
                         if (info_p == NULL ) {
@@ -190,6 +203,7 @@ int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_stor
                                 return 0;
                         } 
                 }
+#endif /* ENABLE_FOLLOW_PID */
                 DBG( "New connection\n" );
 
                         
@@ -214,7 +228,11 @@ int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_stor
                         } 
                 }
 
+#ifdef ENABLE_FOLLOW_PID
                 insert_new_connection( conn_p, inode, info_p, ctx );
+#else 
+                insert_new_connection( conn_p, ctx );
+#endif /* ENABLE_FOLLOW_PID */
 
         } else {
                 TRACE( "Found connection data \n" );
@@ -426,7 +444,9 @@ static int purge_closed_from_group( struct chashtable *table_p, struct group *gr
 int purge_closed_connections( struct stat_context *ctx, int closed_cnt )
 {
         struct group *grp;
+#ifdef ENABLE_FOLLOW_PID
         struct pidinfo *info_p;
+#endif /* ENABLE_FOLLOW_PID */
         struct filter *filt;
 
         TRACE( "Purging %d connections \n", closed_cnt );
@@ -441,6 +461,7 @@ int purge_closed_connections( struct stat_context *ctx, int closed_cnt )
 
 
         /* if we are follwing PIDs connections are stored to groups on pidinfo*/
+#ifdef ENABLE_FOLLOW_PID
         if ( OPERATION_ENABLED(ctx, OP_FOLLOW_PID) ) {
                 info_p = ctx->pinfo;
                 while (info_p != NULL && closed_cnt > 0) {
@@ -451,6 +472,7 @@ int purge_closed_connections( struct stat_context *ctx, int closed_cnt )
                 }
                 return closed_cnt;
         }
+#endif /* ENABLE_FOLLOW_PID */
          
         grp = glist_get_head( ctx->out_groups );
         while ( grp != NULL  && closed_cnt > 0 ) {
