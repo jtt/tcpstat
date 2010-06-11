@@ -309,7 +309,7 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
         char *str_p;
         struct filter *filt;
         in_port_t port;
-        struct sockaddr_in sin;
+        struct sockaddr_storage ss;
 
         if ( ! argstr || strlen( argstr ) == 0 ) 
                 return -1;
@@ -320,16 +320,19 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
                         return -1;
                 }
 
-                filt = filter_init( policy, act, 1 );
-                memset( &sin, 0, sizeof(sin));
-
-                sin.sin_family = AF_INET;
-                sin.sin_port = htons(port);
-
                 TRACE("Adding filtering for port %d \n", port );
-                filter_set_raddr( filt, (struct sockaddr_storage *)&sin );
 
+                memset( &ss, 0, sizeof(ss));
+                /* Even if the address family is AF_INET, the port
+                 * filter will match on both address families
+                 */
+                ss.ss_family = AF_INET;
+                ss_set_port( &ss, port);
+
+                filt = filter_init( policy, act, 1 );
+                filter_set_raddr( filt, &ss );
                 filtlist_add( ctx->filters, filt, ADD_LAST);
+
                 str_p = strtok(NULL,",");
         }
 

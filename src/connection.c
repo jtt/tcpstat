@@ -958,6 +958,23 @@ in_port_t ss_get_port( struct sockaddr_storage *ss)
 }
 
 /**
+ * Set the port number to sockaddr_storage struct. 
+ * Note that the address family must have been set to the struct given 
+ * as parameter.
+ * @param ss The sockaddr_storage struct where the port should be set.
+ */
+void ss_set_port( struct sockaddr_storage *ss, in_port_t port) 
+{
+        if (ss->ss_family == AF_INET ) {
+                ((struct sockaddr_in *)ss)->sin_port = port;
+        } else {
+                ((struct sockaddr_in6 *)ss)->sin6_port = port;
+        }
+}
+
+
+
+/**
  * Get the IPv4 address from IPv6 mapped IPv4 address. 
  *
  * The byte order of the returned address is not changed.
