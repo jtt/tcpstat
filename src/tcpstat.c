@@ -327,7 +327,7 @@ static int parse_port_filter( struct stat_context *ctx, policy_flags_t policy,
                  * filter will match on both address families
                  */
                 ss.ss_family = AF_INET;
-                ss_set_port( &ss, port);
+                ss_set_port( &ss, htons(port));
 
                 filt = filter_init( policy, act, 1 );
                 filter_set_raddr( filt, &ss );

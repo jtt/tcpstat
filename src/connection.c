@@ -959,6 +959,10 @@ in_port_t ss_get_port( struct sockaddr_storage *ss)
 
 /**
  * Set the port number to sockaddr_storage struct. 
+ *
+ * No byte order conversion is done when the port is set, it value
+ * needs to be converted that is up to the caller.
+ *
  * Note that the address family must have been set to the struct given 
  * as parameter.
  * @param ss The sockaddr_storage struct where the port should be set.
