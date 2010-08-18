@@ -115,7 +115,11 @@ void switch_grouping( struct stat_context *ctx, policy_flags_t new_grouping );
 void rotate_new_queue( struct stat_context *ctx );
 int purge_closed_connections( struct stat_context *ctx, int closed_cnt );
 int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_storage *remote_addr,
-                enum tcp_state state, ino_t inode, struct stat_context *ctx );
+                enum tcp_state state,
+#ifdef ENABLE_FOLLOW_PID
+                ino_t inode,
+#endif /* ENABLE_FOLLOW_PID */
+                struct stat_context *ctx );
 void clear_metadata_flags( struct glist *list );
 void group_clear_metadata_flags( struct group *grp );
 void resolve_route_for_connection( struct stat_context *ctx, struct tcp_connection *conn_p);

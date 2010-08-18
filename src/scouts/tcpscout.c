@@ -54,7 +54,12 @@
 #include "connection.h"
 #include "stat.h"
 
-#define NROF_WANTED_TOKENS 4
+#ifdef ENABLE_FOLLOW_PID
+        #define NROF_WANTED_TOKENS 4
+#else 
+        #define NROF_WANTED_TOKENS 3
+#endif /* ENABLE_FOLLOW_PID */
+
 #define STATFILE "/proc/net/tcp"
 #define STAT6FILE "/proc/net/tcp6"
 
@@ -175,7 +180,11 @@ static void parse_connection_data( char *line, void *ctx )
         struct line_token *tokens_p;
         struct sockaddr_storage local_addr, remote_addr;
         int state;
+#ifdef ENABLE_FOLLOW_PID
         int wanted[NROF_WANTED_TOKENS] = { 2,3,4,10 };
+#else
+        int wanted[NROF_WANTED_TOKENS] = { 2,3,4 };
+#endif /* ENABLE_FOLLOW_PID */
         struct line_token tokens[NROF_WANTED_TOKENS];
         struct parser_req req = {
                 .interested_tokens = wanted,
@@ -183,7 +192,9 @@ static void parse_connection_data( char *line, void *ctx )
                 .tokens = tokens,
                 .token_count = NROF_WANTED_TOKENS
         };
+#ifdef ENABLE_FOLLOW_PID
         ino_t inode; 
+#endif /* ENABLE_FOLLOW_PID */
 
         TRACE("Tokenizing\n" );
         tokens_p = tokenize( &req, line );
@@ -219,10 +230,12 @@ static void parse_connection_data( char *line, void *ctx )
         state = strtol( tokens_p->token, NULL, 16 );
         TRACE( "State %d \n", state ); 
 
+#ifdef ENABLE_FOLLOW_PID
         tokens_p = tokens_p->next;
         TRACE( "token 4:(%d)*%s*\n", tokens_p->token_len, tokens_p->token );
         inode = strtol( tokens_p->token, NULL, 10 );
         TRACE( "Inode %d \n", inode );
+#endif /* ENABLE_FOLLOW_PID */
         
 
         TRACE("Done\n" );
@@ -230,7 +243,11 @@ static void parse_connection_data( char *line, void *ctx )
                 WARN( "Eccess elements in token structure \n" );
         }
 
+#ifdef ENABLE_FOLLOW_PID
         insert_connection( &local_addr, &remote_addr, state, inode, (struct stat_context *)ctx );
+#else
+        insert_connection( &local_addr, &remote_addr, state, (struct stat_context *)ctx );
+#endif /* ENABLE_FOLLOW_PID */
 
 }
 
@@ -251,7 +268,11 @@ static void parse_connection6_data( char *line, void *ctx )
         struct line_token *tokens_p;
         struct sockaddr_storage local_addr, remote_addr;
         int state;
+#ifdef ENABLE_FOLLOW_PID
         int wanted[NROF_WANTED_TOKENS] = { 2,3,4,10 };
+#else
+        int wanted[NROF_WANTED_TOKENS] = { 2,3,4};
+#endif /* ENABLE_FOLLOW_PID */
         struct line_token tokens[NROF_WANTED_TOKENS];
         struct parser_req req = {
                 .interested_tokens = wanted,
@@ -259,7 +280,9 @@ static void parse_connection6_data( char *line, void *ctx )
                 .tokens = tokens,
                 .token_count = NROF_WANTED_TOKENS
         };
+#ifdef ENABLE_FOLLOW_PID 
         ino_t inode; 
+#endif /* ENABLE_FOLLOW_PID */
         char addrbuf[INET6_ADDRSTRLEN];
 
         TRACE("Tokenizing\n" );
@@ -296,10 +319,12 @@ static void parse_connection6_data( char *line, void *ctx )
         state = strtol( tokens_p->token, NULL, 16 );
         TRACE( "State %d \n", state ); 
 
+#ifdef ENABLE_FOLLOW_PID
         tokens_p = tokens_p->next;
         TRACE( "token 4:(%d)*%s*\n", tokens_p->token_len, tokens_p->token );
         inode = strtol( tokens_p->token, NULL, 10 );
         TRACE( "Inode %d \n", inode );
+#endif /* ENABLE_FOLLOW_PID */
         
 
         TRACE("Done\n" );
@@ -315,7 +340,11 @@ static void parse_connection6_data( char *line, void *ctx )
         DBG( "Read remote IPV6 address %s \n", addrbuf );
 
 
+#ifdef ENABLE_FOLLOW_PID
         insert_connection( &local_addr, &remote_addr, state, inode, (struct stat_context *)ctx );
+#else
+        insert_connection( &local_addr, &remote_addr, state, (struct stat_context *)ctx );
+#endif /* ENABLE_FOLLOW_PID */
 
 }
 

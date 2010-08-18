@@ -183,7 +183,11 @@ static void insert_new_connection( struct tcp_connection *conn_p,
  * @return always 0.
  */
 int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_storage *remote_addr,
-                enum tcp_state state, ino_t inode, struct stat_context *ctx )
+                enum tcp_state state,
+#ifdef ENABLE_FOLLOW_PID
+                ino_t inode,
+#endif /* ENABLE_FOLLOW_PID */
+                struct stat_context *ctx )
 {
         struct group *grp;
 #ifdef ENABLE_FOLLOW_PID
