@@ -49,7 +49,6 @@
 #define DPRINT_MODULE 
 #define DPRINT_STAMP
 */
-
 /*
 #define MEM_DBG_MAX_NR_ALLOC 500
 #define DEBUG_MEM 
@@ -104,6 +103,11 @@ enum dbg_module {
  * to silence the compiler.
  */
 #define _UNUSED __attribute__((unused))
+
+/* Define this to use getifaddrs() instead of
+ * SIOCGIFCONF ioctl() to get the addresses of network interfaces.
+ */
+#define USE_GETIFADDRS
 
 /* 
  * "features" enabled 

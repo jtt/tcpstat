@@ -11,7 +11,7 @@
  * @author Jukka Taimisto 
  *
  * @par Copyright
- * Copyright (C) 2006 -2007 Jukka Taimisto 
+ * Copyright (C) 2006 -2010 Jukka Taimisto
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -54,6 +54,7 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <arpa/inet.h>
+#include <errno.h>
 
 #define DBG_MODULE_NAME DBG_MODULE_IF
 
@@ -65,11 +66,16 @@
 #include "rtscout.h"
 #include "ifscout.h"
 
+#ifdef USE_GETIFADDRS
+#include <ifaddrs.h>
+#endif /* USE_GETIFADDRS */
+
 /**
  * File to look for interface statistics
  */
 #define IFSTAT_FILE "/proc/net/dev"
 
+#ifndef USE_GETIFADDRS
 /**
  * Name of the file to look for IPv6 addresses for interfaces. 
  */
@@ -82,6 +88,7 @@
 
 /* forward declaration */
 static void read_interface_v6addrs( struct ifinfo_tab *tab );
+#endif /* not USE_GETIFADDRS */
 
 /** 
  * @defgroup ifscout_api Interface infromation gathering functions. 
@@ -93,6 +100,81 @@ static void read_interface_v6addrs( struct ifinfo_tab *tab );
  * interfaces.
  */
 
+#ifdef USE_GETIFADDRS
+/**
+ * Scan through every interface on the system and record name and address for
+ * the interface.
+ * Goes through all interfaces on the system, also interfaces currently not up
+ * are listed. A pointer to a info table is returned, the memory allocated for
+ * the tab should be freed when the table is no longer needed.
+ * @ingroup ifscout_api
+ * @return Pointer to the table containing information for the interfaces.
+ */
+struct ifinfo_tab *scout_ifs(void)
+{
+        struct ifinfo_tab *tab_p;
+        struct ifinfo *curr_info;
+        struct ifinfo_addr *new_addr;
+        struct ifaddrs *ifa, *ifa_iter;
+
+        if (getifaddrs(&ifa) != 0) {
+                WARN("get_ifaddrs() failed: %s \n", strerror(errno));
+                return NULL;
+        }
+
+        tab_p = mem_alloc( sizeof(*tab_p));
+        memset( tab_p, 0, sizeof(*tab_p));
+
+        ifa_iter = ifa;
+        while (ifa_iter != NULL) {
+                if ( ifa_iter->ifa_addr == NULL ) {
+                        DBG("Discarding interface %s, no address info\n", ifa_iter->ifa_name);
+                        goto next;
+                }
+                if ( ifa_iter->ifa_addr->sa_family != AF_INET &&
+                                ifa_iter->ifa_addr->sa_family != AF_INET6 ) {
+                        DBG("Discarding interface %s, interface address family not INET or INET6\n",
+                                        ifa_iter->ifa_name);
+                        goto next;
+                }
+
+                curr_info = get_ifinfo_by_name(tab_p,ifa_iter->ifa_name);
+                if (curr_info == NULL ) {
+                        /* haven't seen this interface before */
+                        TRACE("Allocating info for interface %s\n", ifa_iter->ifa_name);
+                        curr_info = mem_alloc( sizeof(*curr_info));
+                        memset( curr_info, 0, sizeof(*curr_info));
+                        strncpy(curr_info->ifname, ifa_iter->ifa_name, IFNAMEMAX);
+                        curr_info->ifname[IFNAMEMAX-1] = '\0';
+                        curr_info->next = tab_p->ifs;
+                        tab_p->ifs = curr_info;
+
+                        tab_p->size++;
+                }
+                new_addr = mem_alloc(sizeof(*new_addr));
+                if (ifa_iter->ifa_addr->sa_family == AF_INET) {
+                        struct sockaddr_in *sin = (struct sockaddr_in *)ifa_iter->ifa_addr;
+                        TRACE("Adding IPv4 address to interface %s\n", curr_info->ifname);
+                        new_addr->family = AF_INET;
+                        memcpy( &new_addr->ifinfo_v4addr, &sin->sin_addr,
+                                        sizeof(struct in_addr));
+                } else if (ifa_iter->ifa_addr->sa_family == AF_INET6) {
+                        struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)ifa_iter->ifa_addr;
+                        TRACE("Adding IPv6 address to interface %s\n", curr_info->ifname);
+                        new_addr->family = AF_INET6;
+                        memcpy( &new_addr->ifinfo_v6addr, &sin6->sin6_addr,
+                                        sizeof(struct in6_addr));
+                }
+                new_addr->next = curr_info->ifaddr;
+                curr_info->ifaddr = new_addr;
+next:
+                ifa_iter = ifa_iter->ifa_next;
+        }
+
+        freeifaddrs(ifa);
+        return tab_p;
+}
+#else /* USE_GETIFADDRS */
 /**
  * Scan through every interface on the system and record name and address for
  * the interface.
@@ -145,17 +227,11 @@ struct ifinfo_tab *scout_ifs( void )
         TRACE( "Number of interfaces %d \n", len );
         close( sockfd );
         
+        if (len <= 0) 
+                return NULL;
 
-        if ( len > 0 ) {
-                /* Prepare the info table */
-                tab_p = mem_alloc( sizeof( struct ifinfo_tab ) );
-                tab_p->ifs = mem_alloc( len * sizeof( struct ifinfo ) );
-                memset( tab_p->ifs, 0, len * sizeof( struct ifinfo));
-                tab_p->size = len;
-                info_p = tab_p->ifs;
-        } else {
-                tab_p = NULL;
-        } 
+        tab_p = mem_alloc( sizeof( struct ifinfo_tab ) );
+        memset(tab_p,0,sizeof(*tab_p));
         
         /* Iterate through all interfaces */
         ifr = ( struct ifreq *)ifc.ifc_buf;
@@ -165,6 +241,8 @@ struct ifinfo_tab *scout_ifs( void )
                 DBG( "Interface %d \n", len );
                 addr = (struct sockaddr_in *)&(ifr->ifr_addr);
                 DBG( "Interface name |%s| and addr 0x%x\n", ifr->ifr_name, addr->sin_addr.s_addr );
+                info_p = mem_alloc( sizeof(*info_p));
+                memset( info_p, 0, sizeof(*info_p));
 
                 strncpy( info_p->ifname, ifr->ifr_name, IFNAMEMAX );
                 info_p->ifaddr = mem_alloc( sizeof( struct ifinfo_addr ));
@@ -172,8 +250,10 @@ struct ifinfo_tab *scout_ifs( void )
                 info_p->ifaddr->next = NULL;
                 info_p->ifaddr->family = AF_INET;
                 
+                info_p->next = tab_p->ifs;
+                tab_p->ifs = info_p;
+
                 ifr++; 
-                info_p++;
                 len--; 
         }
 
@@ -186,6 +266,7 @@ struct ifinfo_tab *scout_ifs( void )
 
         return tab_p;
 } 
+#endif /* USE_GETIFADDRS */
 
 /**
  * Compare the IP address given in sockaddr storage to IP address on the 
@@ -258,11 +339,10 @@ const char *ifname_for_addr( struct ifinfo_tab *tab_p, struct sockaddr_storage *
 {
         struct ifinfo_addr *iaddr;
         struct ifinfo *info_p;
-        int i;
 
-        for ( i = 0; i < tab_p->size; i++ ) {
-                info_p = &(tab_p->ifs[i] );
-                ASSERT((info_p != NULL) );
+        info_p = tab_p->ifs;
+
+        while( info_p != NULL ) {
                 TRACE( "Matching to interface %s\n", info_p->ifname );
                 iaddr = info_p->ifaddr;
                 while( iaddr != NULL ) {
@@ -273,6 +353,7 @@ const char *ifname_for_addr( struct ifinfo_tab *tab_p, struct sockaddr_storage *
                         TRACE("No match\n");
                         iaddr = iaddr->next;
                 }
+                info_p = info_p->next;
         }
         return NULL;
 
@@ -294,13 +375,14 @@ int iftab_has_routes( struct ifinfo_tab *tab_p )
 {
         int rv = 0;
 #ifdef ENABLE_ROUTES
-        int i;
+        struct ifinfo *info_p = tab_p->ifs;
 
-        for ( i = 0; i < tab_p->size; i++ ) {
-                if ( tab_p->ifs[i].routes != NULL ) {
+        while( info_p != NULL ) {
+                if ( info_p->routes != NULL ) {
                         rv = 1;
                         break;
                 }
+                info_p = info_p->next;
         }
 #endif /* ENABLE_ROUTES */
 
@@ -320,20 +402,20 @@ int iftab_has_routes( struct ifinfo_tab *tab_p )
  */
 struct ifinfo *get_ifinfo_by_name( struct ifinfo_tab *tab, const char *name )
 {
-        struct ifinfo *ret = NULL;
-        int i;
+        struct ifinfo *info = NULL;
 
         if ( name == NULL ) 
                 return NULL;
 
-        for ( i = 0; i < tab->size; i++ ) {
-                if ( strncmp( tab->ifs[i].ifname, name, IFNAMEMAX ) == 0 ) {
-                        ret = &(tab->ifs[i]);
-                        break;
-                }
+        info = tab->ifs;
+        while( info != NULL ) {
+                if ( strncmp( info->ifname, name, IFNAMEMAX ) == 0 )
+                        return info;
+
+                info = info->next;
         }
 
-        return ret;
+        return NULL;
 }
                 
 
@@ -349,30 +431,32 @@ struct ifinfo *get_ifinfo_by_name( struct ifinfo_tab *tab, const char *name )
  */ 
 void deinit_ifinfo_tab( struct ifinfo_tab *tab_p )
 {
-        int i;
         struct ifinfo_addr *iaddr_p, *tmp;
+        struct ifinfo *info, *iter;
 
-        if ( tab_p->ifs ) {
-                for( i= 0; i < tab_p->size; i++ ) {
+        if (tab_p->ifs == NULL)
+                return;
+
+        iter = tab_p->ifs;
+        while( iter != NULL ) {
 #ifdef ENABLE_ROUTES
-                        if ( tab_p->ifs[i].routes != NULL ) 
-                                rtlist_deinit( tab_p->ifs[i].routes, 1 );
+                if ( iter->routes != NULL )
+                        rtlist_deinit( iter->routes, 1 );
 #endif /* ENABLE_ROUTES */
-
-                        iaddr_p = tab_p->ifs[i].ifaddr;
-                        while ( iaddr_p != NULL ) {
-                                tmp = iaddr_p->next;
-                                mem_free( iaddr_p );
-                                iaddr_p = tmp;
-                        }
+                iaddr_p = iter->ifaddr;
+                while ( iaddr_p != NULL ) {
+                        tmp = iaddr_p->next;
+                        mem_free( iaddr_p );
+                        iaddr_p = tmp;
                 }
-                mem_free( tab_p->ifs );
+                info = iter->next;
+                mem_free(iter);
+                iter = info;
         }
-
         mem_free( tab_p );
 
 }
-
+#ifndef USE_GETIFADDRS
 /**
  * Line parser callback called for every line in 
  * <code>/proc/net/if_inet6</code>. Parses IPv6 addresses for interfaces.
@@ -447,6 +531,8 @@ static void read_interface_v6addrs( struct ifinfo_tab *info )
 
         parse_file_per_line( IF6_FILE, 0, parse_v6addresses, info);
 }
+#endif /* not USE_GETIFADDRS */
+
 #ifdef ENABLE_IFSTATS
 /** 
  * @brief Parse interface statistic for tokenized lines. 

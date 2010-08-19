@@ -228,7 +228,6 @@ void gui_print_if_banners( struct stat_context *ctx )
 {
         struct ifinfo *if_p;
         struct ifinfo_tab *tab_p = ctx->iftab;
-        int i;
 
         if ( tab_p->size == 0 ) {
                 WARN( "Empty interface table\n" );
@@ -240,8 +239,8 @@ void gui_print_if_banners( struct stat_context *ctx )
         attroff( A_REVERSE );
 
 
-        for ( i = 0; i < tab_p->size; i++ ) {
-                if_p = &(tab_p->ifs[i]);
+        if_p = tab_p->ifs;
+        while( if_p != NULL ) {
                 add_to_linebuf( "%4s : RX ", if_p->ifname );
                 write_linebuf_partial();
                 if ( gui_print_ifdiffs() ) {
@@ -288,7 +287,7 @@ void gui_print_if_banners( struct stat_context *ctx )
                 write_linebuf_partial_attr( A_BOLD );
                 add_to_linebuf(" bytes/sec");
                 write_linebuf();
-
+                if_p = if_p->next;
         }
 }
 #endif /* ENABLE_IFSTATS */

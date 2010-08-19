@@ -4,7 +4,7 @@
  * @author Jukka Taimisto 
  *
  * @par Copyright
- * Copyright (C) 2006 Jukka Taimisto 
+ * Copyright (C) 2010 Jukka Taimisto
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -93,6 +93,7 @@ struct ifinfo {
 #ifdef ENABLE_ROUTES
         struct rtlist *routes;/**< "Routing" information for this interface */
 #endif /* ENABLE_ROUTES */
+        struct ifinfo *next; /**< Pointer to the next interface on list */
 };
 
 /**
