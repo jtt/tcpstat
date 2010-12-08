@@ -140,7 +140,7 @@ void ui_update_view( struct stat_context *ctx )
         gui_draw();
 }
 
-extern void do_exit( struct stat_context *ctx, char *exit_msg );
+extern void do_exit( struct stat_context *ctx, char *exit_msg, int success);
 /** 
  * @brief Handle user commands.
  * Input loop waits for key presses from user and acts on them. When GUI is
@@ -174,7 +174,7 @@ void ui_input_loop( struct stat_context *ctx )
 
                 case 'q' :
                         TRACE( "Got quit key press. Exiting \n" );
-                        do_exit( ctx, NULL );
+                        do_exit( ctx, NULL,0 );
                         break;
                 case 'n' :
                 case 'N' :

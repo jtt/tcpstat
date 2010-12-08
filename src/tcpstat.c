@@ -408,8 +408,9 @@ static int parse_addr_filter( struct stat_context *ctx, policy_flags_t policy,
  * 
  * @param ctx Pointer to the global context.
  * @param exit_msg Message to be printed out on exit (NULL for no message).
+ * @param success zero for exiting with EXIT_SUCCESS, other for failure.
  */
-void do_exit( struct stat_context *ctx, char *exit_msg )
+void do_exit( struct stat_context *ctx, char *exit_msg, int success )
 {
 #ifdef ENABLE_FOLLOW_PID
         struct pidinfo *info_p;
@@ -450,7 +451,10 @@ void do_exit( struct stat_context *ctx, char *exit_msg )
         if ( exit_msg )
                 printf("\n%s\n", exit_msg );
 
-        exit(0);
+        if (success)
+                exit(EXIT_SUCCESS);
+        else
+                exit(EXIT_FAILURE);
 }
 
 /** 
@@ -472,7 +476,7 @@ void do_sighandler( _UNUSED int sig )
         ERROR( "Exiting on signal %d \n", sig );
 
         ui_deinit();
-        exit( 0 );
+        exit(EXIT_FAILURE);
 }
 
 /**
@@ -727,7 +731,7 @@ int main( int argc, char *argv[] )
                         if ( count > 0 ) {
                                 if ( purge_closed_connections( ctx, count ) != 0 ) {
                                         WARN( "Purge closed blew it \n" );
-                                        do_exit( ctx, "Fatal internal error!\n" );
+                                        do_exit( ctx, "Fatal internal error!\n",-1 );
                                 }
                         }
                 }  
@@ -735,7 +739,7 @@ int main( int argc, char *argv[] )
                 if ( OPERATION_ENABLED( ctx, OP_FOLLOW_PID) ) {
                         if ( check_dead_processes( ctx ) == 0 ) {
                                 /* XXX - Some message is needed */
-                                do_exit( ctx, "No more processes to follow!\n" );
+                                do_exit( ctx, "No more processes to follow!\n",0 );
                         }
                 }
 #endif /* ENABLE_FOLLOW_PID */
@@ -770,7 +774,7 @@ int main( int argc, char *argv[] )
         }
 
         WARN( "Should not come here!\n" );
-        do_exit( ctx, "Bang; not here\n" );
+        do_exit( ctx, "Bang; not here\n",-1 );
 
 
         return 0;
