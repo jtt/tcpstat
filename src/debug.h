@@ -108,8 +108,8 @@ extern int dbg_initialized;
 #define DEBUG_XDUMP(d,l,m)(dbg_xdump_data(dbg_initialized?dbg_file:stdout,d,l,m))
 #endif /* DPRINT_MODULE */
 
-#define DBG_INIT(f)(dbg_set_file(f))
-#define DBG_DEINIT()(dbg_exit())
+#define DBG_INIT(f)(dbg_init(f))
+#define DBG_DEINIT()(dbg_deinit())
 #define DBG_LEVEL(l)( dbg_set_level(l) )
 #ifdef DPRINT_MODULE
 #define DBG_MODULE_LEVEL(m,l)( dbg_set_module_level(m,l) )
@@ -225,8 +225,8 @@ void *do_mem_realloc( void *ptr, size_t size );
  * Functions used only when DEBUG was set
  */ 
 #ifdef DEBUG
-void dbg_set_file(char *name);
-void dbg_exit( void );
+void dbg_init(char *filename);
+void dbg_deinit( void );
 void dbg_set_level( enum dbg_level lvl );
 #ifdef DPRINT_MODULE
 void dbg_set_module_level( enum dbg_module module, enum dbg_level lvl );

@@ -161,7 +161,7 @@ static enum dbg_level dbg_current_level = DEBUG_DEFAULT_LEVEL;
  * this file.
  * This should be used from DBG_INIT() macro, not directly.
  */ 
-void dbg_set_file(char *name)
+static void dbg_set_file(char *name)
 {
         if ( dbg_initialized ) {
                 fclose(dbg_file);
@@ -177,14 +177,43 @@ void dbg_set_file(char *name)
 /**
  * Close the debug file
  *
- *  This should be used by DBG_DEINIT macro
  */  
-void dbg_exit( void )
+static void dbg_close_file( void )
 {
-        if ( dbg_initialized ) {
+        if ( dbg_initialized && dbg_file != NULL ) {
+                fflush(dbg_file);
                 fclose(dbg_file);
-                dbg_initialized = 0;
+                dbg_file = NULL;
         }
+}
+
+/**
+ * Deinitialize the debugging system. If debugs have been written to a file,
+ * the file is closed. 
+ */
+void dbg_deinit( void )
+{
+#ifdef DEBUG_MEM
+        dump_alloc_table();
+#endif /* DEBUG_MEM */
+        dbg_close_file();
+        dbg_initialized = 0;
+}
+
+
+/**
+ * Initialize debuggin framework, name of the file where debugs will be written
+ * can be given as parameter. 
+ * This function should not be called directly, DBG_DEINIT should be used
+ * instead.
+ * @param filename Name of the debug file, NULL for stdout
+ */
+void dbg_init(char *filename)
+{
+        if (filename != NULL)
+                dbg_set_file(filename);
+
+        atexit(dbg_deinit);
 }
 
 /**

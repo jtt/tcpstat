@@ -443,11 +443,6 @@ void do_exit( struct stat_context *ctx, char *exit_msg, int success )
 
         mem_free( ctx );
 
-#ifdef DEBUG_MEM
-        dump_alloc_table();
-#endif 
-        DBG_DEINIT();
-
         if ( exit_msg )
                 printf("\n%s\n", exit_msg );
 
