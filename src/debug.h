@@ -149,8 +149,8 @@ extern int dbg_initialized;
 #ifdef ENABLE_ASSERTIONS
 #define ASSERT(c) do {\
         if ( ! (c) ) { \
-                fprintf(stderr,"Assertion failed on %s:%d\n",__FILE__,__LINE__);\
-                exit(-1);\
+                fprintf(stderr,"Assertion '%s' failed on %s:%d\n",#c,__FILE__,__LINE__);\
+                abort();\
         }\
 } while(0);
 
