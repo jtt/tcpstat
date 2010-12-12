@@ -260,14 +260,4 @@ void str2bytes(char *str,unsigned char *buf, int *buflen);
 int bytes2str(unsigned char *bytes,char *str,int bytelen);
 void i2bytes(int nbr, unsigned char *bytes);
 
-/*
- * Functions for gmp debugging
- */ 
-#ifdef MPZ_DEBUG
-void print_mp(mpz_t p,char *s);
-void print_mp_d(mpz_t p, const char *s);
-int mpz2bytes(mpz_t number, unsigned char *bytes, int len);
-#endif /* MPZ_DEBUG */
-
 #endif /* _DEBUG_H_ */
-

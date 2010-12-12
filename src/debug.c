@@ -83,11 +83,6 @@
 #include <ctype.h>
 #include <time.h>
 
-#ifdef DEBUG_MPZ
-#include <gmp.h>
-#include "curve.h"
-#endif
-
 #include "defs.h"
 #include "debug.h"
 
@@ -163,7 +158,7 @@ static enum dbg_level dbg_current_level = DEBUG_DEFAULT_LEVEL;
  */ 
 static void dbg_set_file(char *name)
 {
-        if ( dbg_initialized ) {
+        if ( dbg_initialized && dbg_file != NULL ) {
                 fclose(dbg_file);
         }
         dbg_file = fopen(name,"w"); 
@@ -478,12 +473,11 @@ static void add_dbg_table(const char *name, size_t size, void *ptr)
 {
         int i=0;
 
-        while ( alloc_table[i].flag == MEM_DBG_USED && i < MEM_DBG_MAX_NR_ALLOC ) {
+        while ( i < MEM_DBG_MAX_NR_ALLOC && alloc_table[i].flag == MEM_DBG_USED ) 
                 i++;
-        }
+
         if ( i == MEM_DBG_MAX_NR_ALLOC ) {
                 ERROR_MSG(__FUNCTION__,"alloc_table is full, increase MEM_DBG_MAX_NR_ALLOC");
-                EXIT_F();
                 return;
         } else {
                 strcpy(alloc_table[i].fname,name); /* XXX */
@@ -511,18 +505,16 @@ static void rem_dbg_table(void *ptr)
 {
         int i = 0;
 
-        while ( i < MEM_DBG_MAX_NR_ALLOC && alloc_table[i].ptr != ptr ) {
+        while ( i < MEM_DBG_MAX_NR_ALLOC && alloc_table[i].ptr != ptr )
                 i++;
-        }
 
-        if ( alloc_table[i].ptr == ptr ) {
+        if ( i == MEM_DBG_MAX_NR_ALLOC ) {
+                ERROR("Unable to find pointer which was freed\n");
+        } else if ( alloc_table[i].ptr == ptr ) {
                 mem_dbg_alloc = mem_dbg_alloc - alloc_table[i].size;
                 alloc_table[i].ptr = NULL;
                 alloc_table[i].flag = MEM_DBG_UNUSED;
-        } else if ( i == MEM_DBG_MAX_NR_ALLOC ) {
-                ERROR_MSG(__FUNCTION__,"didn't find the ptr!!!");
-                return;
-        }
+        } 
         return;
 }
 
@@ -539,11 +531,9 @@ void dump_alloc_table( void )
         DPRINT("--=[ Dumping alloc table ]=--\n");
         for ( i=0; i< MEM_DBG_MAX_NR_ALLOC; i++ ){
                 if ( alloc_table[i].flag == MEM_DBG_USED ) {
-                        DPRINT("--[%d\t (%s) %s [%p](%d bytes)\n",i,alloc_table[i].flag==MEM_DBG_UNUSED?"UNUSED":"USED"
+                        DPRINT("--[%d\t %s [%p](%d bytes)\n",i
                                ,alloc_table[i].fname,alloc_table[i].ptr,alloc_table[i].size);
-                        if ( alloc_table[i].flag == MEM_DBG_USED ) {
                                 cnt = cnt + alloc_table[i].size;
-                        }
                 }
         }
         DPRINT("Total unfreed memory %d bytes (mem_dbg_alloc = %ld)\n",cnt,mem_dbg_alloc);
@@ -566,17 +556,18 @@ void dump_alloc_table( void )
  */ 
 void *dbg_mem_alloc(const char *f, size_t size )
 {
-	void *ptr;
+        void *ptr;
 
-	ptr = (void *)malloc( size );
-	if ( ptr == NULL ) {
-		fprintf(stderr,"Malloc killed Kenny!\n" );
-		exit(1);
-	}
+        ptr = (void *)malloc( size );
+#ifdef ENABLE_ASSERTIONS
+        ASSERT( ptr != NULL );
+#else
+        abort();
+#endif /* ENABLE_ASSERTIONS */
+
         add_dbg_table(f,size,ptr);
         DPRINT("%s allocated %d bytes (allocated to %p)\n",f,size,ptr);
-
-	return ptr;
+        return ptr;
 }
 
 /**
@@ -594,10 +585,11 @@ void *dbg_mem_realloc( const char *f, void *ptr, size_t size )
         void *nptr ;
 
         nptr = (void *)realloc(ptr, size );
-        if ( nptr == NULL ) {
-                fprintf(stderr, "realloc() killed Kenny!\n" );
-                exit( 1 );
-        }
+#ifdef ENABLE_ASSERTIONS
+        ASSERT( ptr != NULL );
+#else
+        abort();
+#endif /* ENABLE_ASSERTIONS */
         rem_dbg_table( ptr );
         add_dbg_table( f, size, nptr );
         DBG( "%s reallocated %d bytes (allocated to %p,was %p)\n",f,size,nptr,ptr );
@@ -616,12 +608,12 @@ void dbg_mem_free(const char *f, void *ptr )
 
         DPRINT("DEBUG_MEM: %s freed memory (freeing from %p)\n",f,ptr);
 
-	if ( ptr == NULL ) {
-		ERROR_MSG("mem_free","Freeing NULL pointer!");
-		return;
-	} else {
-		free( ptr );
-	}
+        if ( ptr == NULL ) {
+                ERROR("trying to free NULL pointer\n");
+                return;
+        } else {
+                free( ptr );
+        }
         rem_dbg_table(ptr);
 }
 #endif /* DEBUG_MEM */
@@ -695,15 +687,15 @@ void log_message(enum log_level lvl, const char *format, ...)
  */
 void *do_mem_alloc( size_t size )
 {
-	void *ptr;
+        void *ptr;
 
-
-	ptr = (void *)malloc( size );
-	if ( ptr == NULL ) {
-		fprintf(stderr,"Malloc tappoi Kennyn!");
-		exit(1);
-	}
-	return ptr;
+        ptr = (void *)malloc( size );
+#ifdef ENABLE_ASSERTIONS
+        ASSERT( ptr != NULL );
+#else
+        abort();
+#endif /* ENABLE_ASSERTIONS */
+        return ptr;
 }
 
 
@@ -723,10 +715,11 @@ void *do_mem_realloc( void *ptr, size_t size )
         void *nptr;
 
         nptr = (void *)realloc( ptr, size );
-        if ( nptr == NULL ) {
-                fprintf( stderr, "realloc() killed Kenny!" );
-                exit( 1 );
-        }
+#ifdef ENABLE_ASSERTIONS
+        ASSERT( nptr != NULL );
+#else
+        abort();
+#endif /* ENABLE_ASSERTIONS */
         return nptr;
 }
 /**
@@ -740,12 +733,12 @@ void *do_mem_realloc( void *ptr, size_t size )
  */
 void do_mem_free( void *ptr ) 
 {
-	if ( ptr == NULL ) {
-		ERROR_MSG("mem_free","Freeing NULL pointer!");
-		return;
-	} else {
-		free( ptr );
-	}
+        if ( ptr == NULL ) {
+                ERROR("Trying to free NULL pointer!");
+                return;
+        } else {
+                free( ptr );
+        }
 }
 
 /*
@@ -950,75 +943,3 @@ int xdump_data(FILE *fp, unsigned char *buf, unsigned int len,
         }
         return 0;
 }
-
-/*
- * Functions for gmp debugging
- */ 
-#ifdef DEBUG_MPZ
-/**
- * Prints out an GMP integer in hex
- * @ingroup debugs
- *
- *@param p An GMP integer to be printed 
- *@param s The 'name' of the integer 
- */
-
-void print_mp(mpz_t p,char *s)
-{
-	printf("\n%s [hex]: ",s);
-	mpz_out_str(stdout,16,p);
-	printf("\n");
-}
-/**
- * Prints out an GMP integer in decimal
- * @ingroup debugs
- *
- *@param p An GMP integer to be printed
- *@param s The 'name' of the integer
- */
-void print_mp_d(mpz_t p, const char *s)
-{
-	printf("\n%s [dec]: ",s);
-	mpz_out_str(stdout,10,p);
-	printf("\n");
-}
-/**
- * Converts given GMP integer to bytestring
- * @ingroup debugs
- * Does no memory allocation, the space needed for 
- * bytearray is mpz_size(number) * 4 * sizeof(unsigned char)
- *
- * @bug We assume that the 'limb' of GMP integer is unsigned long int 
- * This may not be true for all platforms.
- *
- *@param number The GMP integer to convert
- *@param bytes The bytestring will be stored here
- *@param len Length of the bytestring 
- *@return 0 if all is fine, -1 is length is too small
- */
-int mpz2bytes(mpz_t number, unsigned char *bytes, int len)
-{
-	unsigned long int raaja;
-	unsigned char *ptr;
-	int i,j;
-	int size;
-	
-	size = mpz_size(number);
-	if ( len < 4*size ) {
-		ERROR_MSG("mpz2bytes","Length of bytebuffer is too small!");
-		return -1;
-	}
-
-	memset(bytes,0,len);
-	ptr = bytes;
-	for (i=size-1; i>=0; i-- ) {
-		raaja = mpz_getlimbn(number,i);
-		for (j=4; j > 0; j-- ) {
-			*ptr = UI_GET_BYTE(raaja,j);
-			ptr++;
-		}
-	}
-
-	return 0;
-}
-#endif /* DEBUG_MPZ */
