@@ -693,7 +693,8 @@ void *do_mem_alloc( size_t size )
 #ifdef ENABLE_ASSERTIONS
         ASSERT( ptr != NULL );
 #else
-        abort();
+	if (ptr == NULL)
+		abort();
 #endif /* ENABLE_ASSERTIONS */
         return ptr;
 }
@@ -718,7 +719,8 @@ void *do_mem_realloc( void *ptr, size_t size )
 #ifdef ENABLE_ASSERTIONS
         ASSERT( nptr != NULL );
 #else
-        abort();
+        if (nptr == NULL) 
+		abort();
 #endif /* ENABLE_ASSERTIONS */
         return nptr;
 }
