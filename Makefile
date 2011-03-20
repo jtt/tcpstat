@@ -28,6 +28,7 @@ ifeq ($(32BIT),1)
 endif
 ifeq ($(SYS),OpenBSD)
 	CFLAGS += -DOPENBSD
+	LFLAGS += -lkvm
 endif
 ifeq ($(SYS),Linux)
 	CFLAGS += -DLINUX
@@ -51,7 +52,12 @@ INSTALL_FLAGS=-s -m $(INSTALL_MODE)
 ## Program definitions 
 OBJS= debug.o stat.o tcpstat.o parser.o connection.o  group.o filter.o 
 UI_OBJS= printout_curses.o view.o banners.o main_view.o endpoint_view.o help_view.o
-SCOUT_OBJS= ifscout.o pidscout.o tcpscout.o rtscout.o  
+ifeq ($(SYS),Linux)
+	SCOUT_OBJS= ifscout.o pidscout.o tcpscout.o rtscout.o  
+endif
+ifeq ($(SYS),OpenBSD)
+	SCOUT_OBJS= ifscout.o tcpscout_bsd.o
+endif
 
 PROGNAME=tcpstat
 COMMON_HDRS=src/debug.h src/defs.h src/connection.h src/filter.h
