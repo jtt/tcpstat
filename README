@@ -1,4 +1,3 @@
-
  ABOUT
 
  tcpstat is a simple program which can be used to monitor active TCP
@@ -8,14 +7,19 @@
  the development, the program has reached a state where it might actually be
  usefull. If it only had proper help and man pages. 
 
+ Tcpstat supports currently Linux and OpenBSD systems. Not all functionality
+ is yet available on OpenBSD.
+
  LICENSING 
 
  The program is licensed under two-clause BSD license. 
 
  BUILDING and INSTALLING
 
- Edit the Makefile to suit your needs. Type 'make' optionally followed by 'make
- install'
+ Note that currently GNU make is needed to build the program on OpenBSD.
+
+ Edit the Makefile to suit your needs. Type '(g)make' optionally followed by
+ '(g)make install'
 
  If you want to enable the debug information, edit src/defs.h and remove
  comments around #define DEBUG. Then rebuild the application. If built with
@@ -29,5 +33,4 @@
  CONTACT
 
  Send all bug reports, improvement ideas and such to jtaimisto@gmail.com.
-
 
