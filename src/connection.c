@@ -44,8 +44,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #endif /* OPENBSD */
+#include <arpa/inet.h>
 
 #define DBG_MODULE_NAME DBG_MODULE_CONN
 
