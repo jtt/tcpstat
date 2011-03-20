@@ -36,6 +36,9 @@
 #ifndef _CONNECTION_H_ 
 #define _CONNECTION_H_
 
+#ifdef OPENBSD
+#include <sys/socket.h> /* struct sockaddr_storage */
+#endif /* OPENBSD */
 #include <netinet/in.h>
 
 

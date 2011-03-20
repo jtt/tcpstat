@@ -294,8 +294,10 @@ static int compare_ifinfo_addr( struct ifinfo_addr *iaddr,
                         IN6_IS_ADDR_V4MAPPED(ss_get_addr6(addr_p))) {
 
                         saddr6 = (struct sockaddr_in6 *)addr_p;
+#ifndef OPENBSD /* makes assumptions about sockaddr_in6 internals */
                         TRACE("Comparing (iaddr) %.4x to %.4x\n", iaddr->ifinfo_v4addr.s_addr,
                                         ntohl(saddr6->sin6_addr.s6_addr32[3]) );
+#endif /* not OPENBSD */
                         if ( sin6_get_v4addr(saddr6) == iaddr->ifinfo_v4addr.s_addr ) {
                                 return 1;
                         }

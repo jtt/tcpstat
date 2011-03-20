@@ -45,8 +45,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <sys/types.h> 
-#include <sys/socket.h>
-#include <arpa/inet.h>
 
 #define DBG_MODULE_NAME DBG_MODULE_RT
 

@@ -5,6 +5,8 @@
 # installation root directory
 PREFIX=/usr/local
 
+SYS=$(shell uname -s)
+
 # Compiler 
 CC=gcc
 # install program 
@@ -23,6 +25,12 @@ endif
 ifeq ($(32BIT),1)
   	CFLAGS += -m32
 	LFLAGS += -m32
+endif
+ifeq ($(SYS),OpenBSD)
+	CFLAGS += -DOPENBSD
+endif
+ifeq ($(SYS),Linux)
+	CFLAGS += -DLINUX
 endif
 
 

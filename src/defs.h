@@ -110,14 +110,21 @@ enum dbg_module {
 #define USE_GETIFADDRS
 
 /* 
- * "features" enabled 
+ * "features" enabled : 
+ *
+ * ENABLE_ROUTES - Gather information about routes.
+ * ENABLE_FOLLOW_PID - Allow following connections belonging
+ * to specified processes.
+ * ENABLE_IFSTATS - Gather statistics about interfaces.
  */
-/* Scout routes */
-#define ENABLE_ROUTES
-/* follow pid -mode */
-#define ENABLE_FOLLOW_PID
-/* Check for interface stats */
-#define ENABLE_IFSTATS
 
+#ifdef OPENBSD
+/* For OpenBSD, no additional features yet */
+
+#else /* OPENBSD */
+#define ENABLE_ROUTES
+#define ENABLE_FOLLOW_PID
+#define ENABLE_IFSTATS
+#endif /* OPENBSD */
 
 #endif /* _DEFS_H_ */

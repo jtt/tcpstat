@@ -40,9 +40,12 @@
 #include <string.h>
 #include <inttypes.h>
 #include <netdb.h>
-
+#ifdef OPENBSD
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
-
+#endif /* OPENBSD */
 
 #define DBG_MODULE_NAME DBG_MODULE_CONN
 

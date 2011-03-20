@@ -46,7 +46,6 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include <arpa/inet.h> /* inet_pton() */
 #include <errno.h>
 #include <netdb.h> /* getaddrinfo() */
 
