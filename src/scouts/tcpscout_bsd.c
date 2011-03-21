@@ -118,23 +118,23 @@ static int handle_connection(kvm_t *kv, struct inpcb *inpcb, struct stat_context
         if (inpcb->inp_flags & INP_IPV6) {
                 struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&local; 
                 sin6->sin6_family = AF_INET6;
-                memcpy( &sin6->sin6_addr, &inpcb->inp_laddr6, sizeof(struct sockaddr_in6));
+                memcpy( &sin6->sin6_addr, &inpcb->inp_laddr6, sizeof(struct in6_addr));
                 sin6->sin6_port = inpcb->inp_lport;
 
                 sin6 = (struct sockaddr_in6 *)&remote;
                 sin6->sin6_family = AF_INET6;
-                memcpy(&sin6->sin6_addr, &inpcb->inp_faddr6, sizeof(struct sockaddr_in6));
+                memcpy(&sin6->sin6_addr, &inpcb->inp_faddr6, sizeof(struct in6_addr));
                 sin6->sin6_port = inpcb->inp_fport;
         } else {
                 struct sockaddr_in *sin = (struct sockaddr_in *)&local;
 
                 sin->sin_family = AF_INET;
-                memcpy(&sin->sin_addr, &inpcb->inp_laddr,sizeof(struct sockaddr_in));
+                memcpy(&sin->sin_addr, &inpcb->inp_laddr,sizeof(struct in_addr));
                 sin->sin_port = inpcb->inp_lport;
 
                 sin = (struct sockaddr_in *)&remote;
                 sin->sin_family = AF_INET;
-                memcpy(&sin->sin_addr, &inpcb->inp_faddr, sizeof(struct sockaddr_in));
+                memcpy(&sin->sin_addr, &inpcb->inp_faddr, sizeof(struct in_addr));
                 sin->sin_port = inpcb->inp_fport;
         }
 
