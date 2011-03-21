@@ -7,8 +7,8 @@
  the development, the program has reached a state where it might actually be
  usefull. If it only had proper help and man pages. 
 
- Tcpstat supports currently Linux and OpenBSD systems. Not all functionality
- is yet available on OpenBSD.
+ Tcpstat supports currently Linux, OpenBSD and OS X systems. Not all functionality
+ is yet available on OpenBSD or OS X.
 
  LICENSING 
 
@@ -16,7 +16,7 @@
 
  BUILDING and INSTALLING
 
- Note that currently GNU make is needed to build the program on OpenBSD.
+ Note that currently GNU make is needed to build the program on OpenBSD or OS X.
 
  Edit the Makefile to suit your needs. Type '(g)make' optionally followed by
  '(g)make install'

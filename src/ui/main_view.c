@@ -139,6 +139,10 @@ static char *conn_state_to_str( enum tcp_state state )
 #define LONG_TIME_FMT "%d:%.2d"
 #define TIME_FMT "%ds"
 #endif /* OPENBSD */
+#ifdef OSX
+#define LONG_TIME_FMT "%ld:%.2ld"
+#define TIME_FMT "%lds"
+#endif /* OSX */
 
 /** 
  * @brief Get the number of seconds the connection has been active

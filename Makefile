@@ -33,6 +33,9 @@ endif
 ifeq ($(SYS),Linux)
 	CFLAGS += -DLINUX
 endif
+ifeq ($(SYS),Darwin)
+	CFLAGS += -DOSX
+endif
 
 
 ifdef BUILDID
@@ -57,6 +60,9 @@ ifeq ($(SYS),Linux)
 endif
 ifeq ($(SYS),OpenBSD)
 	SCOUT_OBJS= ifscout.o tcpscout_bsd.o
+endif
+ifeq ($(SYS),Darwin)
+	SCOUT_OBJS= ifscout.o tcpscout_osx.o
 endif
 
 PROGNAME=tcpstat

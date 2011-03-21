@@ -121,10 +121,14 @@ enum dbg_module {
 #ifdef OPENBSD
 /* For OpenBSD, no additional features yet */
 
-#else /* OPENBSD */
+#endif /* OPENBSD */
+#ifdef OSX
+/* For OSX, no additional features yet */
+#endif 
+#ifdef LINUX
 #define ENABLE_ROUTES
 #define ENABLE_FOLLOW_PID
 #define ENABLE_IFSTATS
-#endif /* OPENBSD */
+#endif /* LINUX */
 
 #endif /* _DEFS_H_ */
