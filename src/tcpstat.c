@@ -53,12 +53,9 @@
 #include "defs.h"
 #include "debug.h"
 #include "connection.h"
-#include "pidscout.h"
 #include "stat.h"
-#include "rtscout.h"
-#include "ifscout.h"
 #include "ui.h"
-#include "tcpscout.h"
+#include "scouts.h"
 
 #define STATFILE "/proc/net/tcp"
 #define PROGNAMELEN 20

@@ -39,6 +39,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */ 
+
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
@@ -54,10 +55,10 @@
 #include "connection.h"
 #include "stat.h"
 #include "parser.h"
-#include "ifscout.h"
-#include "rtscout.h"
+#include "scouts.h"
 
 #ifdef ENABLE_ROUTES
+
 /**
  * file to read the routes from
  */

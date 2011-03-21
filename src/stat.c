@@ -53,9 +53,7 @@
 #include "parser.h"
 #include "connection.h"
 #include "stat.h"
-#include "rtscout.h"
-#include "ifscout.h"
-#include "pidscout.h"
+#include "scouts.h"
 
 /*#define LINELEN 160 */
 

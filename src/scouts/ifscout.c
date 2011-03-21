@@ -63,8 +63,7 @@
 #include "connection.h"
 #include "stat.h"
 #include "parser.h"
-#include "rtscout.h"
-#include "ifscout.h"
+#include "scouts.h"
 
 #ifdef USE_GETIFADDRS
 #include <ifaddrs.h>
@@ -294,7 +293,7 @@ static int compare_ifinfo_addr( struct ifinfo_addr *iaddr,
                         IN6_IS_ADDR_V4MAPPED(ss_get_addr6(addr_p))) {
 
                         saddr6 = (struct sockaddr_in6 *)addr_p;
-#ifndef OPENBSD /* makes assumptions about sockaddr_in6 internals */
+#ifdef LINUX /* makes assumptions about sockaddr_in6 internals */
                         TRACE("Comparing (iaddr) %.4x to %.4x\n", iaddr->ifinfo_v4addr.s_addr,
                                         ntohl(saddr6->sin6_addr.s6_addr32[3]) );
 #endif /* not OPENBSD */

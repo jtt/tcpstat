@@ -47,8 +47,8 @@
 #include "defs.h"
 #include "debug.h"
 #include "connection.h"
-#include "pidscout.h"
 #include "stat.h"
+#include "scouts.h"
 #include "printout_curses.h"
 #include "ui.h"
 

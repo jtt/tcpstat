@@ -49,7 +49,8 @@
 #include "defs.h"
 #include "debug.h"
 #include "connection.h"
-#include "pidscout.h"
+#include "stat.h"
+#include "scouts.h"
 
 #ifdef ENABLE_FOLLOW_PID
 

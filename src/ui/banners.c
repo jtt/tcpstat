@@ -52,9 +52,7 @@
 #include "debug.h"
 #include "connection.h"
 #include "stat.h"
-#include "ifscout.h"
-#include "rtscout.h"
-#include "pidscout.h" /* need to dereference pidinfo pointer */
+#include "scouts.h"
 #include "printout_curses.h"
 
 #ifdef DEBUG 
