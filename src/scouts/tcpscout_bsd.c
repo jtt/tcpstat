@@ -209,9 +209,4 @@ int read_tcp_stat( struct stat_context *ctx )
         kvm_close(kv);
         return 0;
 }
-
-int read_tcp6_stat( _UNUSED struct stat_context *ctx )
-{
-        return 0;
-}
 #endif /* OPENBSD */

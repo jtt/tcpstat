@@ -620,7 +620,7 @@ int main( int argc, char *argv[] )
 {
         struct stat_context *ctx;
         struct filter *filt;
-        int round =0,rv;
+        int round =0;
 
 
         if ( signal( SIGTERM, do_sighandler ) == SIG_ERR ) {
@@ -690,22 +690,10 @@ int main( int argc, char *argv[] )
                 if ( OPERATION_ENABLED(ctx, OP_IFSTATS ))
                         read_interface_stat( ctx );
 #endif /* ENABLE_IFSTATS */
-                
-                if ( ctx->collected_stats != STAT_V4_ONLY ) {
-                        rv = read_tcp6_stat( ctx );
-                        if ( rv != 0 ) {
-                                ERROR( "Error while reading stats from TCP6" );
-                                break;
-                        }
+                if (read_tcp_stat(ctx) != 0 ) {
+                        ERROR("Error while reading TCP connections \n");
+                        break;
                 }
-                if ( ctx->collected_stats != STAT_V6_ONLY ) {
-                        rv = read_tcp_stat( ctx );
-                        if ( rv != 0 ) {
-                                ERROR( "Error while reading stats from TCP" );
-                                break;
-                        }
-                }
-
 #ifdef ENABLE_FOLLOW_PID
                 if ( ! OPERATION_ENABLED(ctx, OP_FOLLOW_PID)) {
                         rotate_new_queue( ctx );

@@ -174,7 +174,6 @@ struct pidinfo {
  * Function prototypes
  */
 int read_tcp_stat( struct stat_context *ctx );
-int read_tcp6_stat( struct stat_context *ctx );
 
 /*
  * Interface Information API

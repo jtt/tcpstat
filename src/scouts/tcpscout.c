@@ -351,6 +351,8 @@ static void parse_connection6_data( char *line, void *ctx )
 /** 
  * @brief Read TCP stats from /proc/net/tcp.
  * TCP stats are read and parsed. The detected connections are inserted.
+ *
+ * Parses both ipv4 and ipv6 stats (if enabled).
  * 
  * @param ctx Pointer to the main context.
  * 
@@ -358,19 +360,15 @@ static void parse_connection6_data( char *line, void *ctx )
  */
 int read_tcp_stat( struct stat_context *ctx )
 {
-        return parse_file_per_line( STATFILE, 1, parse_connection_data, ctx );
-}
+        int ret = -1;
+        if (ctx->collected_stats != STAT_V4_ONLY) {
+                ret = parse_file_per_line(STAT6FILE,1,parse_connection6_data,
+                                ctx);
+                if (ret == -1)
+                        return ret;
+        }
+        if (ctx->collected_stats != STAT_V6_ONLY)
+                ret = parse_file_per_line( STATFILE, 1, parse_connection_data, ctx );
 
-/** 
- * @brief Read TCP stats from /proc/net/tcp6.
- * TCP stats are read and parsed. The detected connections are inserted.
- * 
- * @param ctx Pointer to the main context.
- * 
- * @return 0 success, -1 on error.  
- */
-int read_tcp6_stat( struct stat_context *ctx )
-{
-
-        return parse_file_per_line( STAT6FILE, 1, parse_connection6_data, ctx );
+        return ret;
 }
