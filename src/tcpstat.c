@@ -48,6 +48,10 @@
 
 #include <errno.h>
 #include <netdb.h> /* getaddrinfo() */
+#ifdef OPENBSD
+#include <sys/types.h>
+#include <unistd.h>
+#endif /* OPENBSD */
 
 
 #include "defs.h"
@@ -636,6 +640,13 @@ int main( int argc, char *argv[] )
                 return -1;
         }
 
+#ifdef OPENBSD
+        if (geteuid() != 0) {
+                fprintf(stderr, "You need to be root to be able to gather tcp connection information\n");
+                exit(EXIT_FAILURE);
+        }
+#endif /* OPENBSD */
+
         DBG_INIT( "debug.txt" );
 
 
@@ -677,6 +688,7 @@ int main( int argc, char *argv[] )
         DBG("Adding routing info\n");
         parse_routing_info(ctx->iftab);
 #endif /* ENABLE_ROUTES */
+
 
 
         ui_init( ctx );
