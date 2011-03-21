@@ -130,6 +130,16 @@ static char *conn_state_to_str( enum tcp_state state )
         }
         return tcp_stat_str[ state ];
 }
+#ifdef LINUX
+#define LONG_TIME_FMT "%ld:%.2ld"
+#define TIME_FMT "%lds"
+#endif /* LINUX */
+#ifdef OPENBSD
+/* time_t, it seems, is not long */
+#define LONG_TIME_FMT "%d:%.2d"
+#define TIME_FMT "%ds"
+#endif /* OPENBSD */
+
 /** 
  * @brief Get the number of seconds the connection has been active
  * 
@@ -149,9 +159,9 @@ static char *get_live_time( struct conn_metadata *data_p,
         if ( diff > 60 ) {
                 time_t min = diff/60;
                 time_t sec = diff % 60;
-                snprintf(buf, buflen, "%ld:%.2ld", min, sec );
+                snprintf(buf, buflen, LONG_TIME_FMT, min, sec );
         } else {
-                snprintf( buf, buflen, "%lds", diff );
+                snprintf( buf, buflen, TIME_FMT, diff );
         }
 
         return buf;

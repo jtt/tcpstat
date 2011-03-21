@@ -802,31 +802,6 @@ void str2bytes(char *str,unsigned char *buf, int *buflen)
 	*buflen = len%2==0?len/2:len/2+1;
 }
 /**
- * Converts given bytestring to string 
- * @ingroup utils
- * Does no memory allocation...
- *@param bytes The bytestring
- *@param str The string 
- *@param bytelen of the bytestring 
- */
-
-int bytes2str(unsigned char *bytes,char *str,int bytelen)
-{
-	int i;
-	unsigned char *ptr;
-	char *str_tmp;
-	
-	ptr = bytes;
-	str_tmp = str;
-	for (i=0; i < bytelen; i++ ) {
-		sprintf(str_tmp,"%.2x",*ptr);
-		ptr++;
-		str_tmp += 2;
-	}
-	
-	return 0;
-}
-/**
  * Returns byte representation of (unsigned) integer
  *
  * @ingroup utils

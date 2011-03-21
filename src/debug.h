@@ -257,7 +257,6 @@ int xdump_data(FILE *fp, unsigned char *buf, unsigned int len,
  * Utility functions, usable always 
  */ 
 void str2bytes(char *str,unsigned char *buf, int *buflen);
-int bytes2str(unsigned char *bytes,char *str,int bytelen);
 void i2bytes(int nbr, unsigned char *bytes);
 
 #endif /* _DEBUG_H_ */
