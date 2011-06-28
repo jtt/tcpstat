@@ -206,9 +206,11 @@ void log_message(enum log_level, const char *format, ...);
 void *dbg_mem_alloc(const char *f, size_t size);
 void dbg_mem_free(const char *f, void *ptr);
 void *dbg_mem_realloc( const char *f, void *ptr, size_t size );
-#define mem_alloc(s) dbg_mem_alloc(__FUNCTION__,s)
-#define mem_free(p) dbg_mem_free(__FUNCTION__,p)
-#define mem_realloc(p,s) dbg_mem_realloc(__FUNCTION__,p,s)
+void *dbg_mem_zalloc(const char *f, size_t size);
+#define mem_alloc(s) dbg_mem_alloc(__FUNCTION__,(s))
+#define mem_free(p) dbg_mem_free(__FUNCTION__,(p))
+#define mem_realloc(p,s) dbg_mem_realloc(__FUNCTION__,(p),(s))
+#define mem_zalloc(s) dbg_mem_zalloc(__FUNCTION__,(s))
 void dump_alloc_table( void );
 
 #define DEBUG_SH_MEM 
@@ -217,9 +219,11 @@ void dump_alloc_table( void );
 void *do_mem_alloc( size_t size );
 void do_mem_free( void *ptr );
 void *do_mem_realloc( void *ptr, size_t size );
-#define mem_alloc(s) do_mem_alloc(s)
-#define mem_free(p) do_mem_free(p)
-#define mem_realloc(p,s) do_mem_realloc(p,s)
+void *do_mem_zalloc( size_t size);
+#define mem_alloc(s) do_mem_alloc((s))
+#define mem_free(p) do_mem_free((p))
+#define mem_realloc(p,s) do_mem_realloc((p),(s))
+#define mem_zalloc(s) do_mem_zalloc((s))
 #endif /* DEBUG_MEM && DEBUG */
 /*
  * Functions used only when DEBUG was set

@@ -510,6 +510,7 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                { "ignore-raddr",1,0,'A'},
                { "warn-raddr",1,0,'w' },
                { "warn-rport",1,0,'W' },
+               { "pcap",1,0,'P'},
 #ifdef DEBUG
                { "debug",1,0,'D'},
 #endif /* DEBUG */    
@@ -517,7 +518,7 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
        };      
 
        while( 1 ) {
-              c = getopt_long( argc, argv, "hlnLi46rg:d:p:R:A:", sw_long_options, &option_index );
+              c = getopt_long( argc, argv, "hlnLi46rg:d:p:R:A:P:", sw_long_options, &option_index );
               if ( c == -1 ) {
                      break;
               }
@@ -607,6 +608,17 @@ static void parse_args( int argc, char **argv, struct stat_context *ctx )
                                      exit(EXIT_FAILURE);
                              }
                              break;
+                      case 'P' :
+                             if (OPERATION_ENABLED(ctx, OP_FOLLOW_PID)) {
+                                     print_user_error("Can not follow PID when reading from pcap file");
+                                     exit(EXIT_FAILURE);
+                             }
+                             OPERATION_ENABLE(ctx, OP_PCAP);
+                             ctx->pkt = mem_zalloc( sizeof(*ctx->pkt)); /* FIXME */
+                             ctx->pkt->handle = PKT_HANDLE_INVALID;
+                             strncpy( ctx->pkt->pcap_name, optarg, MAX_FILENAME_LEN);
+                             break;
+
                       default :
                              print_help( argv[0] );
                              mem_free( ctx );
@@ -693,6 +705,17 @@ int main( int argc, char *argv[] )
 
         ui_init( ctx );
         while ( 1 )  {
+                if (OPERATION_ENABLED(ctx, OP_PCAP)) {
+                        int pkt_ret = read_packet_stat(ctx);
+                        if ( pkt_ret == 1 ) {
+                                do_exit(ctx,"All packets read",0);
+                        } else if (pkt_ret == -1 ) {
+                                do_exit(ctx, "Error while reading packets",1);
+                        } else {
+                                continue;
+                        }
+                }
+
 #ifdef ENABLE_FOLLOW_PID
                 if ( OPERATION_ENABLED(ctx,OP_FOLLOW_PID) ) 
                         scan_inodes( ctx->pinfo );

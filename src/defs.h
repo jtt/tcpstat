@@ -62,6 +62,13 @@
 
 #define DBG_ERR_TO_STDOUT
 
+/**
+ * maximum number of characters on a file name given as a command line
+ * parameter. 
+ * A bit lame, I know.
+ */
+#define MAX_FILENAME_LEN 250
+
 
 #define ADDRSTR_BUFLEN 56
 
@@ -88,6 +95,8 @@ enum dbg_module {
         DBG_MODULE_FILTER,
         DBG_MODULE_RT,
         DBG_MODULE_VIEW,
+        DBG_MODULE_READER,
+        DBG_MODULE_PKT,
         DBG_MODULE_GENERIC /* this should always be the last */
 };
 #endif /* DPRINT_MODULE */

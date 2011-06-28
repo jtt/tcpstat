@@ -125,6 +125,8 @@ struct dbg_module_info dbg_modules[] = {
         {"FILTER", DEBUG_DEFAULT_LEVEL},
         {"RTINFO", DEBUG_DEFAULT_LEVEL},
         {"VIEW", DEBUG_DEFAULT_LEVEL },
+        {"READER", DEBUG_DEFAULT_LEVEL },
+        {"PACKET", DEBUG_DEFAULT_LEVEL },
         {"GENERIC",DEBUG_DEFAULT_LEVEL},
 };
 #endif /* DPRINT_MODULE */
@@ -571,6 +573,23 @@ void *dbg_mem_alloc(const char *f, size_t size )
 }
 
 /**
+ * Allocate and initialize to zero memory with debugging enabled. 
+ * @ingroup debugs
+ * This function should not be called directly.
+ * @see do_mem_alloc
+ * @param f Name of the function doing the allocation.
+ * @param size Number of bytes to allocate.
+ * @return Pointer to the allocated and initialized block.
+ */
+void *dbg_mem_zalloc(const char *f, size_t size)
+{
+        void *ptr = dbg_mem_alloc(f,size);
+        if (ptr)
+                memset(ptr,0,size);
+        return ptr;
+}
+
+/**
  * Reallocate memory with memory debugging enabled.
  * @ingroup debugs 
  * This function should not be used directly.
@@ -693,12 +712,29 @@ void *do_mem_alloc( size_t size )
 #ifdef ENABLE_ASSERTIONS
         ASSERT( ptr != NULL );
 #else
-	if (ptr == NULL)
-		abort();
+        if (ptr == NULL)
+                abort();
 #endif /* ENABLE_ASSERTIONS */
         return ptr;
 }
 
+/**
+ * Allocate and intialize to zero a block of memory.
+ * @ingroup utils
+ * Wrapper for malloc() with error checking and initialization.
+ * The function should not be used directly. Macro mem_alloc() should 
+ * be used for memory allocations.
+ * @param size Number of bytes to allocate.
+ * @return Pointer to the allocated and initialized data area.
+ */
+void *do_mem_zalloc(size_t size)
+{
+        void *ptr = do_mem_alloc(size);
+        if (ptr)
+                memset(ptr,0,size);
+
+        return ptr;
+}
 
 /** 
  * @brief Wrapper for realloc with error checking. 
@@ -760,46 +796,46 @@ void do_mem_free( void *ptr )
 
 void str2bytes(char *str,unsigned char *buf, int *buflen)
 {
-	int len = strlen(str);
-	int i;
-	unsigned char *ptr;
+        int len = strlen(str);
+        int i;
+        unsigned char *ptr;
 
-	ptr = buf; 
-	for (i=0; i < len; i++ ) {
-		if ( '0' <= str[i] && str[i] <= '9' ) {
-			*ptr = str[i]^0x30;
-		} else if ( 'a'<= str[i] && str[i]<='f' ) {
-			*ptr = str[i]- 'a' + 10;
+        ptr = buf; 
+        for (i=0; i < len; i++ ) {
+                if ( '0' <= str[i] && str[i] <= '9' ) {
+                        *ptr = str[i]^0x30;
+                } else if ( 'a'<= str[i] && str[i]<='f' ) {
+                        *ptr = str[i]- 'a' + 10;
                 } else if ( 'A' <= str[i] && str[i] <= 'F' ) {
                         *ptr = tolower( str[i] ) - 'a' + 10;
-		} else {
-			ERROR_MSG("str2bytes","Wrong characters in string!");
-		}
-		if (str[i+1] == '\0' ) {
-			break;
-		}
-		*ptr = *ptr<<4;
+                } else {
+                        ERROR_MSG("str2bytes","Wrong characters in string!");
+                }
+                if (str[i+1] == '\0' ) {
+                        break;
+                }
+                *ptr = *ptr<<4;
 
-		i++;
-			
-		if ( '0' <= str[i] && str[i] <= '9' ) {
-			*ptr = *ptr|(str[i]^0x30);
-		} else if ( 'a'<= str[i] && str[i] <='f' ) {
-			*ptr = *ptr|((str[i] - 'a' + 10));
+                i++;
+
+                if ( '0' <= str[i] && str[i] <= '9' ) {
+                        *ptr = *ptr|(str[i]^0x30);
+                } else if ( 'a'<= str[i] && str[i] <='f' ) {
+                        *ptr = *ptr|((str[i] - 'a' + 10));
                 } else if ( 'A' <= str[i] && str[i] <= 'F' ) {
                         *ptr = *ptr | ( tolower( str[i] ) - 'a' + 10 );
-		} else {
-			ERROR_MSG("str2bytes","Wrong characters in string!");
-		}
-		
-		ptr++;
-	}
+                } else {
+                        ERROR_MSG("str2bytes","Wrong characters in string!");
+                }
+
+                ptr++;
+        }
 #if 0
 #ifdef DEBUG
-	dump_data(buf,len%2==0?len/2:len/2+1,"[str2bytes] Data out");
+        dump_data(buf,len%2==0?len/2:len/2+1,"[str2bytes] Data out");
 #endif
 #endif 
-	*buflen = len%2==0?len/2:len/2+1;
+        *buflen = len%2==0?len/2:len/2+1;
 }
 /**
  * Returns byte representation of (unsigned) integer
@@ -815,9 +851,9 @@ void i2bytes(int nbr, unsigned char *bytes)
 {
 	int i;
 
-	for( i=0; i < 4; i++ ) {
-		bytes[i] = UI_GET_BYTE(nbr,i);
-	}
+        for( i=0; i < 4; i++ ) {
+                bytes[i] = UI_GET_BYTE(nbr,i);
+        }
 
 }
 /*
