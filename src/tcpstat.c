@@ -652,12 +652,6 @@ int main( int argc, char *argv[] )
                 return -1;
         }
 
-#ifdef OPENBSD
-        if (geteuid() != 0) {
-                fprintf(stderr, "You need to be root to be able to gather tcp connection information\n");
-                exit(EXIT_FAILURE);
-        }
-#endif /* OPENBSD */
 
         DBG_INIT( "debug.txt" );
 
@@ -688,6 +682,14 @@ int main( int argc, char *argv[] )
 
         parse_args( argc, argv, ctx );
 
+#ifdef OPENBSD
+        if (!OPERATION_ENABLED(ctx, OP_PCAP)) {
+                if (geteuid() != 0) {
+                        fprintf(stderr, "You need to be root to be able to gather tcp connection information\n");
+                        exit(EXIT_FAILURE);
+                }
+        }
+#endif /* OPENBSD */
         
         ctx->iftab = scout_ifs();
         if ( ctx->iftab == NULL ) {
