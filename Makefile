@@ -55,7 +55,7 @@ INSTALL_FLAGS=-s -m $(INSTALL_MODE)
 ## Program definitions 
 OBJS= debug.o stat.o tcpstat.o parser.o connection.o  group.o filter.o 
 UI_OBJS= printout_curses.o view.o banners.o main_view.o endpoint_view.o help_view.o
-PKT_OBJS= packet_reader.o
+PKT_OBJS= packet_reader.o tcpip.o
 ifeq ($(SYS),Linux)
 	SCOUT_OBJS= ifscout.o pidscout.o tcpscout.o rtscout.o packetscout.o 
 endif

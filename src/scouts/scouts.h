@@ -223,6 +223,11 @@ struct pidinfo *get_pidinfo_by_inode( ino_t inode, struct pidinfo *info_p );
 struct packet_context {
         char pcap_name[MAX_FILENAME_LEN];
         reader_handle_t handle;
+
+        /* stats */
+        long total_packets;
+        long malformed_packets;
+        long tcp_packets;
 };
 
 /*
