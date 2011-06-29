@@ -60,10 +60,10 @@ ifeq ($(SYS),Linux)
 	SCOUT_OBJS= ifscout.o pidscout.o tcpscout.o rtscout.o packetscout.o 
 endif
 ifeq ($(SYS),OpenBSD)
-	SCOUT_OBJS= ifscout.o tcpscout_bsd.o
+	SCOUT_OBJS= ifscout.o tcpscout_bsd.o packetscout.o
 endif
 ifeq ($(SYS),Darwin)
-	SCOUT_OBJS= ifscout.o tcpscout_osx.o
+	SCOUT_OBJS= ifscout.o tcpscout_osx.o packetscout.o
 endif
 
 PROGNAME=tcpstat
@@ -95,7 +95,7 @@ prog	: $(OBJS) $(UI_OBJS) $(SCOUT_OBJS) $(PKT_OBJS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean	:
-	rm -f $(OBJS) $(UI_OBJS) $(SCOUT_OBJS) $(PROGNAME) core.* 
+	rm -f $(OBJS) $(UI_OBJS) $(SCOUT_OBJS) $(PROGNAME) $(PKT_OBJS) core.* 
 
 docclean :
 	rm -rf doc/html/* 
