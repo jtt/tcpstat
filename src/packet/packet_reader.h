@@ -38,6 +38,10 @@
 #ifndef _PACKET_READER_H_
 #define _PACKET_READER_H_
 
+#ifdef OSX
+#include <sys/time.h> /* struct timeval */
+#endif /* OSX */
+
 /**
  * handle to reader context.
  * All reader functions use this handle to access the active reader context.
