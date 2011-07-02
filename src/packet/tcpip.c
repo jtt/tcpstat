@@ -39,7 +39,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
-#include <arpa/inet.h>
 
 #define DBG_MODULE_NAME DBG_MODULE_PKT
 
