@@ -114,9 +114,6 @@ static void insert_new_connection( struct tcp_connection *conn_p,
                 struct stat_context *ctx )
 {
 
-        /* Fill in the metadata */
-        conn_p->metadata.added = time( NULL );  
-        metadata_set_flag( conn_p->metadata, METADATA_NEW );
 #ifdef ENABLE_FOLLOW_PID
         conn_p->metadata.inode = inode;
 #endif /* ENABLE_FOLLOW_PID */
@@ -125,10 +122,7 @@ static void insert_new_connection( struct tcp_connection *conn_p,
         resolve_route_for_connection( ctx, conn_p );
 #endif /* ENABLE_ROUTES */
 
-        connection_do_addrstrings( conn_p );
-
         /* Put the connection to hashtable */
-
         chash_put(ctx->chash, conn_p );
 
         if ( metadata_is_ignored( conn_p->metadata ) )
@@ -210,12 +204,7 @@ int insert_connection( struct sockaddr_storage *local_addr, struct sockaddr_stor
 
                         
                 ctx->new_count++;
-                conn_p = mem_alloc( sizeof( struct tcp_connection ));
-                memset( conn_p, 0, sizeof( struct tcp_connection ));
-                memcpy( &(conn_p->laddr),local_addr, sizeof(*local_addr) );
-                memcpy( &(conn_p->raddr),remote_addr, sizeof( *remote_addr ) );
-                conn_p->state = state;
-                conn_p->family = local_addr->ss_family;
+                conn_p = connection_init(local_addr, remote_addr, state);
 
                 filt = filtlist_match( ctx->filters, conn_p );
                 if ( filt != NULL ) {

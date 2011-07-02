@@ -254,6 +254,8 @@ struct glist {
 
 
 /* Function prototypes for connection utilities. */
+struct tcp_connection *connection_init(struct sockaddr_storage *local_address,
+                struct sockaddr_storage *remote_address, enum tcp_state state);
 void connection_deinit( struct tcp_connection *con_p );
 int connection_resolve( struct tcp_connection *conn_p );
 int connection_do_addrstrings( struct tcp_connection *con_p );

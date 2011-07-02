@@ -40,6 +40,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <netdb.h>
+#include <time.h>
 #ifdef OPENBSD
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -661,6 +662,39 @@ int cqueue_get_size( struct cqueue *cqueue_p )
  */
 
 /**
+ * Create new TCP connection with given addresses and state. 
+ *
+ * Also, sets the connection creation time to metadata, sets METADATA_NEW flag
+ * for the connection and creates the printable strings for the addresses.
+ *
+ * @ingroup conn_utils
+ * 
+ * @param local_address Local address for the connection.
+ * @param remote_address Remote address for the connection
+ * @param state TCP protocol state for the connection.
+ * @return Pointer to newly created connection.
+ */
+struct tcp_connection *connection_init(struct sockaddr_storage *local_address,
+                struct sockaddr_storage *remote_address, enum tcp_state state)
+{
+        struct tcp_connection *conn;
+
+        conn = mem_zalloc(sizeof(*conn));
+        memcpy( &(conn->laddr),local_address, sizeof(*local_address));
+        memcpy( &(conn->raddr),remote_address, sizeof(*remote_address));
+        conn->state = state;
+        conn->family = local_address->ss_family;
+
+        conn->metadata.added = time(NULL);
+        metadata_set_flag(conn->metadata, METADATA_NEW);
+        connection_do_addrstrings(conn);
+
+        return conn;
+}
+
+
+
+/**
  * Free all data allocated for a tcp_connection structure. 
  * Metadata and addresses are freed with the structure itself, hence the
  * structure is not usable after calling this function. 
@@ -670,7 +704,6 @@ int cqueue_get_size( struct cqueue *cqueue_p )
  */  
 void connection_deinit( struct tcp_connection *con_p )
 {
-        /*mem_free( con_p->metadata ); */
         mem_free( con_p );
 
 } 
@@ -768,29 +801,29 @@ int connection_resolve( struct tcp_connection *conn_p )
         if ( conn_p->family == AF_INET ) {
                 addr_p = &((struct sockaddr_in *)&(conn_p->raddr))->sin_addr;
                 len = sizeof( struct in_addr );
-		family = conn_p->family;
+                family = conn_p->family;
 
                 if ( ((struct in_addr *)addr_p)->s_addr == INADDR_ANY ) 
                         return 0;
 
         } else {
                 if ( IN6_IS_ADDR_V4MAPPED(ss_get_addr6( &conn_p->raddr))) {
-			/* v4 mapped ipv6 address, try to get the host name by
-			 * using the v4 address. Is ugly, but seems to work.
-			 */
-			dummy.s_addr = sin6_get_v4addr((struct sockaddr_in6 *)&(conn_p->raddr));
-			addr_p = &dummy;
-			TRACE( "v4 mapped, trying 0x%x\n", dummy.s_addr );
-			len = sizeof( struct in_addr );
-			family = AF_INET;
-		} else {
-			addr_p = &((struct sockaddr_in6 *)&(conn_p->raddr))->sin6_addr;
-			len = sizeof( struct in6_addr );
-			family = conn_p->family;
+                        /* v4 mapped ipv6 address, try to get the host name by
+                         * using the v4 address. Is ugly, but seems to work.
+                         */
+                        dummy.s_addr = sin6_get_v4addr((struct sockaddr_in6 *)&(conn_p->raddr));
+                        addr_p = &dummy;
+                        TRACE( "v4 mapped, trying 0x%x\n", dummy.s_addr );
+                        len = sizeof( struct in_addr );
+                        family = AF_INET;
+                } else {
+                        addr_p = &((struct sockaddr_in6 *)&(conn_p->raddr))->sin6_addr;
+                        len = sizeof( struct in6_addr );
+                        family = conn_p->family;
 
                         if ( memcmp( addr_p, &in6addr_any, sizeof(in6addr_any)) == 0 ) 
                                 return 0;
-		}
+                }
         }
 
         print_resolving( conn_p->metadata.raddr_string );
@@ -834,8 +867,6 @@ uint16_t connection_get_port( struct tcp_connection *conn, int local )
 
         return ntohs(rv);
 }
-
-
 
 #define ANY_ADDRSTR "*"
 
