@@ -54,6 +54,15 @@ typedef int reader_handle_t;
 #define PKT_HANDLE_INVALID -1
 
 /**
+ * Type of the link layer on the packet. 
+ * Currently we assume the type is ethernet.
+ */
+enum packet_link_type {
+        LINK_ETH
+};
+
+
+/**
  * error valus returned by reader functions 
  */
 enum reader_error {
@@ -75,6 +84,7 @@ typedef uint16_t packet_flags_t;
  * A packet read from the network. 
  */
 struct raw_packet {
+        enum packet_link_type pkt_link; /**< What is the link type for the packet */
         int pkt_length; /**< Number of bytes of data available */
         uint8_t *pkt_data; /**< Data for the packet */
         packet_flags_t pkt_flags; /**< Various flags containing info for the packet */

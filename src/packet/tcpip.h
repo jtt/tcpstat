@@ -39,6 +39,12 @@
 #define _TCPIP_H_
 #include <netinet/in.h>
 
+struct tcp_hdr *pkt_get_tcp( struct raw_packet *pkt);
+struct ipv4_hdr *pkt_get_ip( struct raw_packet *pkt);
+uint8_t *pkt_get_ip_start(struct raw_packet *pkt);
+void fill_sockaddrs(struct raw_packet *pkt, struct sockaddr_storage *src,
+                struct sockaddr_storage *dst);
+
 /**
  * Ethernet frame
  */
@@ -85,8 +91,9 @@ struct ipv4_hdr {
 
 int get_ip_version( struct ipv4_hdr *ip);
 int get_ip_header_len( struct ipv4_hdr *ip);
-void put_ip_src( struct ipv4_hdr *ip, struct in_addr *addr);
-void put_ip_dst( struct ipv4_hdr *ip, struct in_addr *addr);
+uint8_t get_ip_protocol(struct ipv4_hdr *ip);
+void put_ip_src( struct ipv4_hdr *ip, struct sockaddr_storage *ss);
+void put_ip_dst( struct ipv4_hdr *ip, struct sockaddr_storage *ss);
 
 struct tcp_hdr {
         uint16_t tcp_sport;
@@ -111,7 +118,7 @@ struct tcp_hdr {
 int get_tcp_header_len( struct tcp_hdr *tcp);
 uint8_t get_tcp_header_flags(struct tcp_hdr *tcp);
 char *print_tcp_flags(struct tcp_hdr *tcp);
-void put_tcp_sport(struct tcp_hdr *tcp, struct sockaddr_in *sin);
-void put_tcp_dport(struct tcp_hdr *tcp, struct sockaddr_in *sin);
+void put_tcp_sport(struct tcp_hdr *tcp, struct sockaddr_storage *ss);
+void put_tcp_dport(struct tcp_hdr *tcp, struct sockaddr_storage *ss);
 
 #endif /* _TCPIP_H_ */

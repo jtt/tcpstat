@@ -48,6 +48,20 @@
 #include "tcpip.h"
 
 /**
+ * Get the offset to the start of IP packet header. 
+ * The offset is determined by the type of the link used to carry the packet.
+ * @param pkt Pointer to the raw packet.
+ * @return Offset in bytes to the start of IP packet header.
+ */
+static int pkt_get_link_offset(struct raw_packet *pkt)
+{
+        if (pkt->pkt_link == LINK_ETH)
+                return ETH_FRAME_HDR_LEN;
+        else
+                return 0;
+}
+
+/**
  * Get pointer pointing to the start of the IP packet header. 
  * NOTE: No sanity checks, assume the caller knows there is IP header.
  *
@@ -55,9 +69,9 @@
  * @param pkt Pointe to the packet.
  * @return Pointer to the start of the IP header.
  */
-static uint8_t *pkt_get_ip_start(struct raw_packet *pkt)
+uint8_t *pkt_get_ip_start(struct raw_packet *pkt)
 {
-        return pkt->pkt_data + ETH_FRAME_HDR_LEN;
+        return pkt->pkt_data + pkt_get_link_offset(pkt);
 }
 
 /**
@@ -114,23 +128,43 @@ int get_ip_header_len( struct ipv4_hdr *ip)
 
 /**
  * Put the source address from given IP header to the 
- * in_addr struct.
+ * socket address. Sets also the address family.
+ *
  * @param ip IP header to read the source address from
- * @param addr Pointer to the struct in_addr to put the address to.
+ * @param ss Pointer to the socket address where to set the address.
  */
-void put_ip_src( struct ipv4_hdr *ip, struct in_addr *addr)
+void put_ip_src( struct ipv4_hdr *ip, struct sockaddr_storage *ss)
 {
+        struct sockaddr_in *sin = (struct sockaddr_in *)ss;
+        struct in_addr *addr = &(sin->sin_addr);
+
+        sin->sin_family = AF_INET;
         addr->s_addr = ip->ip_src;
 }
 
 /**
- * Put the destination address from given IP header to the
- * in_addr struct.
- * @param ip IP header to read the destination from.
- * @param addr Pointer to the struct in_addr to put the address to.
+ * Get the protocol number from IPv4 header.
+ * @param ip Pointer to the IPv4 header.
+ * @return Protocol number in the IPv4 header.
  */
-void put_ip_dst( struct ipv4_hdr *ip, struct in_addr *addr)
+uint8_t get_ip_protocol(struct ipv4_hdr *ip) 
 {
+       return ip->ip_protocol;
+} 
+
+/**
+ * Put the destination address from given IP header to the
+ * socket address. Sets also the address family.
+ *
+ * @param ip IP header to read the destination from.
+ * @param addr Pointer to the socket address where to set the address.
+ */
+void put_ip_dst( struct ipv4_hdr *ip, struct sockaddr_storage *ss)
+{
+        struct sockaddr_in *sin = (struct sockaddr_in *)ss;
+        struct in_addr *addr = &(sin->sin_addr);
+
+        sin->sin_family = AF_INET;
         addr->s_addr = ip->ip_dst;
 }
 
@@ -166,9 +200,12 @@ uint8_t get_tcp_header_flags(struct tcp_hdr *tcp)
  * @param sin Pointer to the socket address structure where the source port
  * should be put.
  */
-void put_tcp_sport(struct tcp_hdr *tcp, struct sockaddr_in *sin)
+void put_tcp_sport(struct tcp_hdr *tcp, struct sockaddr_storage *ss)
 {
-        sin->sin_port = tcp->tcp_sport;
+        if (ss->ss_family == AF_INET) 
+                ((struct sockaddr_in *)ss)->sin_port = tcp->tcp_sport;
+        else if (ss->ss_family == AF_INET6) 
+                ((struct sockaddr_in6 *)ss)->sin6_port = tcp->tcp_sport;
 }
 
 /**
@@ -177,11 +214,43 @@ void put_tcp_sport(struct tcp_hdr *tcp, struct sockaddr_in *sin)
  * @param sin Pointer to the socket address structure where the source port
  * should be put.
  */
-void put_tcp_dport(struct tcp_hdr *tcp, struct sockaddr_in *sin)
+void put_tcp_dport(struct tcp_hdr *tcp, struct sockaddr_storage *ss)
 {
-        sin->sin_port = tcp->tcp_dport;
+        if (ss->ss_family == AF_INET) 
+                ((struct sockaddr_in *)ss)->sin_port = tcp->tcp_dport;
+        else if (ss->ss_family == AF_INET6) 
+                ((struct sockaddr_in6 *)ss)->sin6_port = tcp->tcp_dport;
 }
 
+/**
+ * Fill the given socket addresses with IP addresses and port numbers read 
+ * from the given raw packet. 
+ *
+ * Note that this function assumes that the protocol data is sanity checked.
+ *
+ * @param pkt Pointer to the raw packet.
+ * @param src Pointer to socket address that will receive the source address
+ * and port.
+ * @param dst Pointer to socker address that will receive the destination
+ * address and port.
+ */
+void fill_sockaddrs(struct raw_packet *pkt, struct sockaddr_storage *src,
+                struct sockaddr_storage *dst)
+{
+        struct ipv4_hdr *ip;
+        struct tcp_hdr *tcp;
+
+        ip = pkt_get_ip(pkt);
+        put_ip_src(ip,src);
+        put_ip_dst(ip,dst);
+
+        if (get_ip_protocol(ip) != IP_PROTO_TCP)
+                return;
+
+        tcp = pkt_get_tcp(pkt);
+        put_tcp_sport(tcp,src);
+        put_tcp_dport(tcp,dst);
+}
 
 /**
  * String returned by each print_tcp_flags call.

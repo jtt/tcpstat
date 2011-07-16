@@ -107,7 +107,7 @@ static int check_packet( struct raw_packet *pkt)
         }
 
         /* this is IP packet; check version, length and protocol */
-        ip = (struct ipv4_hdr *)eth->eth_data;
+        ip = pkt_get_ip(pkt);
         if ( get_ip_version(ip) != 4 ) {
                 TRACE("Invalid IP version %d\n",get_ip_version(ip));
                 return NO_IP_PACKET;
@@ -144,7 +144,7 @@ static int check_packet( struct raw_packet *pkt)
                 return INVALID_PACKET;
         }
 
-        tcp = (struct tcp_hdr *)(eth->eth_data + hlen);
+        tcp = pkt_get_tcp(pkt);
         tcp_hlen = get_tcp_header_len(tcp);
         if (tcp_hlen < TCP_HEADER_MIN_LEN ) {
                 WARN("Malformed packet, too small TCP header length %d\n",
