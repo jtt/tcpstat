@@ -112,7 +112,7 @@ struct rtinfo *rtlist_add( struct rtlist *list, struct rtinfo *info )
         }
 
 
-        if ( list->count == 0 ) {
+        if ( list->count == 0 || list->head == NULL) {
                 list->head = info;
         } else {
                 iter = list->head;
