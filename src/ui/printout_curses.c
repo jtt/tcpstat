@@ -69,6 +69,7 @@ struct gui_curses_context {
         int do_resolve; /**< Resolve hostnames */
         int ifstat_diffs;
         int do_routing; /** Display the routing information */
+        int fuzzy_timestamps;
         enum gui_view view; /**< Currently active view */
 };
 
@@ -143,6 +144,17 @@ int gui_toggle_routing()
 {
         gui_ctx.do_routing = ! gui_ctx.do_routing;
         return gui_ctx.do_routing;
+}
+
+int gui_fuzzy_timestamps() 
+{
+        return gui_ctx.fuzzy_timestamps;
+}
+
+int gui_toggle_fuzzy_timestamps()
+{
+        gui_ctx.fuzzy_timestamps = !gui_ctx.fuzzy_timestamps;
+        return gui_ctx.fuzzy_timestamps;
 }
 
 /**
@@ -370,6 +382,7 @@ int gui_init( struct stat_context *ctx )
 
         gui_ctx.ifstat_diffs = 0;
         gui_ctx.do_routing = 0;
+        gui_ctx.fuzzy_timestamps = 1;
         gui_ctx.view = MAIN_VIEW;
 
         return 0;

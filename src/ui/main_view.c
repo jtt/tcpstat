@@ -130,19 +130,39 @@ static char *conn_state_to_str( enum tcp_state state )
         }
         return tcp_stat_str[ state ];
 }
-#ifdef LINUX
-#define LONG_TIME_FMT "%ld:%.2ld"
-#define TIME_FMT "%lds"
-#endif /* LINUX */
 #ifdef OPENBSD
 /* time_t, it seems, is not long */
-#define LONG_TIME_FMT "%d:%.2d"
-#define TIME_FMT "%ds"
+#define EXACT_TIME_FMT "%ds"
+#define FUZZY_FMT "%d%c"
+#else /* OPENBSD */
+#define EXACT_TIME_FMT "%lds"
+#define FUZZY_FMT "%ld%c"
 #endif /* OPENBSD */
-#ifdef OSX
-#define LONG_TIME_FMT "%ld:%.2ld"
-#define TIME_FMT "%lds"
-#endif /* OSX */
+
+/**
+ * Struct holding information about how to print
+ * fuzzy timestamps.
+ */
+struct timefmt {
+        time_t div;
+        char unit;
+};
+
+/**
+ * Table containing the fuzzy timestamp info
+ */
+struct timefmt fmts[] = {
+        {60,'s'},
+        {60,'m'},
+        {24,'h'},
+        {7,'d'},
+        {0,'w'}
+};
+
+/**
+ * Number of different fuzzy timestamps
+ */
+#define FMTS_LEN 5
 
 /** 
  * @brief Get the number of seconds the connection has been active
@@ -159,19 +179,22 @@ static char *get_live_time( struct conn_metadata *data_p,
 {
         time_t now = time( NULL );
         time_t diff = now - data_p->added;
+        int i;
 
-        if ( diff > 60 ) {
-                time_t min = diff/60;
-                time_t sec = diff % 60;
-                snprintf(buf, buflen, LONG_TIME_FMT, min, sec );
-        } else {
-                snprintf( buf, buflen, TIME_FMT, diff );
+        if (!gui_fuzzy_timestamps()) {
+                snprintf(buf,buflen,EXACT_TIME_FMT,diff);
+                return buf;
         }
 
+        for ( i = 0; i < FMTS_LEN; i++) {
+                if (fmts[i].div == 0 || diff < fmts[i].div) {
+                        snprintf(buf,buflen,FUZZY_FMT,diff,fmts[i].unit);
+                        break;
+                }
+                diff = diff / fmts[i].div;
+        }
         return buf;
 }
-
-
 
 /**
  * Format string used when printing address information to "wide" terminal.
@@ -218,9 +241,6 @@ static const char *format_string_for_addr()
         } 
         return fmt;
 }
-
-
-
 
 /** 
  * @brief Print addresses of the connection on human readable form.
@@ -309,9 +329,6 @@ static void print_rt_info( struct tcp_connection *conn_p )
         }
 }
 #endif /* ENABLE_ROUTES */
-
-
-
 
 /**
  * Print a line containing the connection information. 
@@ -508,7 +525,7 @@ int main_input( struct stat_context *ctx, int key )
                         TRACE( "Setting lingering on" );
                         OPERATION_TOGGLE( ctx, OP_LINGER);
                         break;
-                        case 'A' :
+                case 'A' :
                         TRACE( "Switching grouping to remote address" );
                         if ( gui_get_current_view() == MAIN_VIEW )
                                 switch_grouping( ctx, POLICY_REMOTE | POLICY_ADDR );
@@ -532,6 +549,11 @@ int main_input( struct stat_context *ctx, int key )
                         TRACE( "Switching grouping to state " );
                         if ( gui_get_current_view() == MAIN_VIEW )
                                 switch_grouping( ctx, POLICY_STATE );
+                        break;
+                case 'T' :
+                        TRACE("Toggling fuzzy timestamps");
+                        if (gui_get_current_view() == MAIN_VIEW) 
+                                gui_toggle_fuzzy_timestamps();
                         break;
 #ifdef ENABLE_ROUTES 
                 case 'R' :
@@ -560,6 +582,10 @@ void main_print_help()
         add_to_linebuf(" L  ");
         write_linebuf_partial_attr( A_BOLD);
         add_to_linebuf(" Toggle lingering of closed connections");
+        write_linebuf();
+        add_to_linebuf(" T  ");
+        write_linebuf_partial_attr(A_BOLD);
+        add_to_linebuf(" Toggle connection time format (fuzzy/exact)");
         write_linebuf();
 #ifdef ENABLE_ROUTES 
         add_to_linebuf(" R  ");

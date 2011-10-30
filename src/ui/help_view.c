@@ -115,11 +115,6 @@ static void print_generic_help()
         write_linebuf();
 
 }
-        
-
-
-        
-
 
 /** 
  * @brief Update the UI with help texts. 

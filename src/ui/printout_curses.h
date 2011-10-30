@@ -59,6 +59,8 @@ int gui_toggle_resolve();
 int gui_do_routing();
 int gui_toggle_routing();
 int gui_get_columns();
+int gui_fuzzy_timestamps();
+int gui_toggle_fuzzy_timestamps();
 enum gui_view gui_get_current_view();
 void gui_set_current_view( enum gui_view view );
 void gui_print_statusbar( char *msg );
