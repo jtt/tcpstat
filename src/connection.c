@@ -56,6 +56,18 @@
 #include "stat.h"
 #include "ui.h" /* print "resolving" banner */
 
+/* Helper macros for accessing the socket addresses in struct connection
+ * in various different socket address formats.
+ * Note: These always return pointers.
+ */
+#define LADDR(c)(&((c)->laddr))
+#define LADDR_SIN(c)((struct sockaddr_in *)&((c)->laddr))
+#define LADDR_SIN6(c)((struct sockaddr_in6 *)&((c)->laddr))
+
+#define RADDR(c)(&((c)->raddr))
+#define RADDR_SIN(c)((struct sockaddr_in *)&((c)->raddr))
+#define RADDR_SIN6(c)((struct sockaddr_in6 *)&((c)->raddr))
+
 
 /**
  * @defgroup chashtbl Hashable for TCP connections. 
@@ -142,7 +154,7 @@ static int chash_fn4( struct chashtable *connection_hash, struct sockaddr_in *la
         TRACE( "chash_fn(<0x%.4x:0x%.2x, 0x%.4x:0x%.2x>)=0x%.2x\n", laddr->sin_addr.s_addr, 
                         laddr->sin_port, raddr->sin_addr.s_addr, raddr->sin_port, h & (connection_hash->nrof_buckets -1 ));
         
-	return h & (connection_hash->nrof_buckets - 1);
+        return h & (connection_hash->nrof_buckets - 1);
 }
 
 /**
@@ -186,12 +198,10 @@ static chlist_head *resolve_bucket( struct chashtable *tab_p,
 {
         int hash;
         if ( conn_p->family == AF_INET ) {
-                hash =chash_fn4(tab_p, (struct sockaddr_in *)&conn_p->laddr,
-                                (struct sockaddr_in *)&conn_p->raddr );
+                hash =chash_fn4(tab_p, LADDR_SIN(conn_p), RADDR_SIN(conn_p));
                 return &tab_p->buckets[ hash ];
         } else {
-                hash = chash_fn6(tab_p, (struct sockaddr_in6 *)&conn_p->laddr,
-                                (struct sockaddr_in6 *)&conn_p->raddr );
+                hash = chash_fn6(tab_p, LADDR_SIN6(conn_p), RADDR_SIN6(conn_p));
                 return &tab_p->buckets[ hash ];
         }
 }
@@ -221,7 +231,6 @@ static chlist_head *resolve_bucket_sa( struct chashtable *tab_p,
                                 (struct sockaddr_in6 *)raddr_p ) ];
         }
 }
-
 
 /**
  * Add connection to hashtable. 
@@ -271,8 +280,8 @@ static int key_cmp_v4( struct sockaddr_in *laddr_p, struct sockaddr_in *raddr_p,
 {
         int rv = 0;
 
-        struct sockaddr_in *nlinp = (struct sockaddr_in *)&(node_p->connection->laddr );
-        struct sockaddr_in *nrinp = (struct sockaddr_in *)&(node_p->connection->raddr );
+        struct sockaddr_in *nlinp = LADDR_SIN(node_p->connection);
+        struct sockaddr_in *nrinp = RADDR_SIN(node_p->connection);
 
 #if 0
         TRACE( "Laddr %s %d \n", inet_ntoa( linp->sin_addr ), linp->sin_port );
@@ -311,8 +320,8 @@ static int key_cmp_v6( struct sockaddr_in6 *laddr_p, struct sockaddr_in6 *raddr_
 {
         int rv = 0;
 
-        struct sockaddr_in6 *nlinp = (struct sockaddr_in6 *)&(node_p->connection->laddr );
-        struct sockaddr_in6 *nrinp = (struct sockaddr_in6 *)&(node_p->connection->raddr );
+        struct sockaddr_in6 *nlinp = LADDR_SIN6(node_p->connection);
+        struct sockaddr_in6 *nrinp = RADDR_SIN6(node_p->connection);
 
         if ( memcmp( &(laddr_p->sin6_addr.s6_addr), &(nlinp->sin6_addr.s6_addr), 16) == 0 &&
              laddr_p->sin6_port == nlinp->sin6_port && 
@@ -476,7 +485,7 @@ struct tcp_connection *chash_remove(struct chashtable *connection_hash,
 struct tcp_connection *chash_remove_connection( struct chashtable *connection_hash,
                 struct tcp_connection *conn_p )
 {
-        return chash_remove(connection_hash, &conn_p->laddr, &conn_p->raddr );
+        return chash_remove(connection_hash, LADDR(conn_p),RADDR(conn_p));
 }
         
 
@@ -763,7 +772,7 @@ int connection_resolve( struct tcp_connection *conn_p )
         void *addr_p;
         int len, family;
         uint16_t r_port;
-	struct in_addr dummy;
+        struct in_addr dummy;
         struct tcp_connection *first_conn = NULL;
 
         meta_p = &conn_p->metadata;
@@ -799,7 +808,7 @@ int connection_resolve( struct tcp_connection *conn_p )
         }
 
         if ( conn_p->family == AF_INET ) {
-                addr_p = &((struct sockaddr_in *)&(conn_p->raddr))->sin_addr;
+                addr_p = ss_get_addr(RADDR(conn_p));
                 len = sizeof( struct in_addr );
                 family = conn_p->family;
 
@@ -807,17 +816,17 @@ int connection_resolve( struct tcp_connection *conn_p )
                         return 0;
 
         } else {
-                if ( IN6_IS_ADDR_V4MAPPED(ss_get_addr6( &conn_p->raddr))) {
+                if ( IN6_IS_ADDR_V4MAPPED(ss_get_addr6( RADDR(conn_p)))) {
                         /* v4 mapped ipv6 address, try to get the host name by
                          * using the v4 address. Is ugly, but seems to work.
                          */
-                        dummy.s_addr = sin6_get_v4addr((struct sockaddr_in6 *)&(conn_p->raddr));
+                        dummy.s_addr = sin6_get_v4addr(RADDR_SIN6(conn_p));
                         addr_p = &dummy;
                         TRACE( "v4 mapped, trying 0x%x\n", dummy.s_addr );
                         len = sizeof( struct in_addr );
                         family = AF_INET;
                 } else {
-                        addr_p = &((struct sockaddr_in6 *)&(conn_p->raddr))->sin6_addr;
+                        addr_p = ss_get_addr6(RADDR(conn_p));
                         len = sizeof( struct in6_addr );
                         family = conn_p->family;
 
@@ -859,9 +868,9 @@ uint16_t connection_get_port( struct tcp_connection *conn, int local )
         uint16_t rv;
 
         if ( local ) {
-                ssp = &conn->laddr;
+                ssp = LADDR(conn);
         } else {
-                ssp = &conn->raddr;
+                ssp = RADDR(conn);
         }
         rv = ss_get_port(ssp);
 
@@ -889,7 +898,7 @@ int connection_do_addrstrings( struct tcp_connection *conn_p )
         meta_p->raddr_string[0] = '\0';
 
         if ( conn_p->laddr.ss_family == AF_INET ) {
-                struct sockaddr_in *addr_p = (struct sockaddr_in *)&conn_p->laddr;
+                struct sockaddr_in *addr_p = LADDR_SIN(conn_p);
 
                 if ( addr_p->sin_addr.s_addr == INADDR_ANY ) {
                         strncpy( meta_p->laddr_string, ANY_ADDRSTR, ADDRSTR_BUFLEN );
@@ -903,9 +912,7 @@ int connection_do_addrstrings( struct tcp_connection *conn_p )
                                 return -1;
                         }
                 }
-                addr_p = (struct sockaddr_in *)&conn_p->raddr;
-
-
+                addr_p = RADDR_SIN(conn_p);
                 if ( inet_ntop( addr_p->sin_family,
                                 &addr_p->sin_addr, 
                                 meta_p->raddr_string,
@@ -914,7 +921,7 @@ int connection_do_addrstrings( struct tcp_connection *conn_p )
                         return -1;
                 }
         } else {
-                struct in6_addr *addr = ss_get_addr6( &conn_p->laddr);
+                struct in6_addr *addr = ss_get_addr6(LADDR(conn_p));
 
                 if ( IN6_IS_ADDR_UNSPECIFIED(addr) ) {
                         strncpy( meta_p->laddr_string, ANY_ADDRSTR, ADDRSTR_BUFLEN );
@@ -928,7 +935,7 @@ int connection_do_addrstrings( struct tcp_connection *conn_p )
                                 return -1;
                         }
                 }
-                addr = ss_get_addr6( &conn_p->raddr );
+                addr = ss_get_addr6(RADDR(conn_p));
 
                 if ( inet_ntop( conn_p->raddr.ss_family,
                                 addr, meta_p->raddr_string,

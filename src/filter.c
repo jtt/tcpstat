@@ -52,6 +52,12 @@
 //#include "filter.h"
 
 
+/* Helper macros to get pointer to sockaddr storage held in
+ * struct connection and struct filter
+ */
+#define LADDR(c)(&((c)->laddr))
+#define RADDR(c)(&((c)->raddr))
+
 /**
  * @defgroup filter_api API for using filters
  *
@@ -135,10 +141,10 @@ struct filter *filter_from_connection( struct tcp_connection *conn_p,
         filt = filter_init( selector_flags, act, 0 );
 
         if ( selector_flags & POLICY_LOCAL ) {
-                memcpy( &filt->laddr, &conn_p->laddr, sizeof( struct sockaddr_storage ));
+                memcpy( LADDR(filt), LADDR(conn_p), sizeof( struct sockaddr_storage ));
         }
         if ( selector_flags & POLICY_REMOTE || selector_flags & POLICY_CLOUD ) {
-                memcpy( &filt->raddr, &conn_p->raddr, sizeof( struct sockaddr_storage));
+                memcpy( RADDR(filt), RADDR(conn_p), sizeof( struct sockaddr_storage));
         }
         if ( selector_flags & POLICY_STATE ) {
                 filt->state = conn_p->state;
@@ -285,14 +291,14 @@ int filter_match( struct filter *filt, struct tcp_connection *conn_p )
         }
 
         if ( filt->policy & POLICY_LOCAL ) {
-                rv = match_saddr( &filt->laddr, &conn_p->laddr, filt->policy );
+                rv = match_saddr( LADDR(filt), LADDR(conn_p), filt->policy );
                 if ( rv == 0 ) {
                         TRACE("Local saddr didn't match!\n");
                         return rv;
                 }
         }
         if ( filt->policy & POLICY_REMOTE ) {
-                rv = match_saddr( &filt->raddr, &conn_p->raddr, filt->policy );
+                rv = match_saddr( RADDR(filt), RADDR(conn_p), filt->policy );
                 if ( rv == 0 ) {
                         TRACE("Local saddr didn't match!\n");
                         return rv;
@@ -502,6 +508,6 @@ int filter_set_raddr( struct filter *filt, struct sockaddr_storage *addr )
         else
                 return -1;
 
-        memcpy( &filt->raddr, addr, addrlen );
+        memcpy( RADDR(filt), addr, addrlen );
         return 0;
 }
