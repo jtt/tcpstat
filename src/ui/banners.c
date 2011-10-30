@@ -241,7 +241,7 @@ void gui_print_if_banners( struct stat_context *ctx )
         while( if_p != NULL ) {
                 add_to_linebuf( "%4s : RX ", if_p->ifname );
                 write_linebuf_partial();
-                if ( gui_print_ifdiffs() ) {
+                if (gui_is_enabled(UI_IFSTAT_DIFFS)){
                         add_to_linebuf( "%10llu", if_p->stats.rx_bytes_diff );
                 } else {
                         add_to_linebuf( "%10llu", if_p->stats.rx_bytes );
@@ -249,7 +249,7 @@ void gui_print_if_banners( struct stat_context *ctx )
                 write_linebuf_partial_attr( A_BOLD );
                 add_to_linebuf( " bytes, ");
                 write_linebuf_partial();
-                if ( gui_print_ifdiffs() ) {
+                if (gui_is_enabled(UI_IFSTAT_DIFFS)) {
                         add_to_linebuf( "%6llu", if_p->stats.rx_packets_diff);
                 } else {
                         add_to_linebuf( "%6llu", if_p->stats.rx_packets );
@@ -259,7 +259,7 @@ void gui_print_if_banners( struct stat_context *ctx )
 
                 add_to_linebuf( "  TX ", if_p->ifname );
                 write_linebuf_partial();
-                if ( gui_print_ifdiffs() ) {
+                if (gui_is_enabled(UI_IFSTAT_DIFFS)){
                         add_to_linebuf( "%10llu", if_p->stats.tx_bytes_diff );
                 } else {
                         add_to_linebuf( "%10llu", if_p->stats.tx_bytes );
@@ -267,7 +267,7 @@ void gui_print_if_banners( struct stat_context *ctx )
                 write_linebuf_partial_attr( A_BOLD );
                 add_to_linebuf( " bytes, ");
                 write_linebuf_partial();
-                if ( gui_print_ifdiffs() ) {
+                if (gui_is_enabled(UI_IFSTAT_DIFFS)){
                         add_to_linebuf( "%6llu", if_p->stats.tx_packets_diff );
                 } else {
                         add_to_linebuf( "%6llu", if_p->stats.tx_packets );

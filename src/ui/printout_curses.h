@@ -51,16 +51,35 @@ int write_linebuf_partial_attr( int attr );
 int add_to_linebuf( const char *fmt, ... );
 
 /* GENERIC GUI CONTEXT ACCESSORS */
+/* FLAGS for GUI features which can be controlled by users */
+enum ui_operation {
+        /**
+         * If this flag is set, then show diffs in interface statistics
+         */
+        UI_IFSTAT_DIFFS = 0x01 << 2,
+        /**
+         * Flag indicating that routing information should be shown.
+         */
+        UI_SHOW_ROUTE = 0x01 << 3,
+        /**
+         * Flag indicating that fuzzy timestamps instead of exact seconds should be
+         * shown
+         */
+        UI_FUZZY_TIMESTAMPS  = 0x01 << 4,
+        /**
+         * Flag indicating that we should resolve names for IP addresses.
+         */
+        UI_RESOLVE_NAMES = 0x01 << 5
+};
+
+void gui_enable_operation(enum ui_operation op);
+void gui_disable_operation(enum ui_operation op);
+void gui_toggle_operation(enum ui_operation op);
+
+int gui_is_enabled(enum ui_operation op);
+
 void reset_ctx( void );
-int gui_print_ifdiffs();
-int gui_toggle_ifdiffs();
-int gui_resolve_names();
-int gui_toggle_resolve();
-int gui_do_routing();
-int gui_toggle_routing();
 int gui_get_columns();
-int gui_fuzzy_timestamps();
-int gui_toggle_fuzzy_timestamps();
 enum gui_view gui_get_current_view();
 void gui_set_current_view( enum gui_view view );
 void gui_print_statusbar( char *msg );
@@ -102,7 +121,5 @@ int help_update( struct stat_context *ctx );
 #define GUI_COLUMN_WIDE_LIMIT 110
 #define GUI_COLUMN_WIDEST_LIMIT 150
 #define GUI_COLUMN_RT_WIDE_LIMIT 130
-
-
 
 #endif /* _PRINTOUT_CURSES_H_ */

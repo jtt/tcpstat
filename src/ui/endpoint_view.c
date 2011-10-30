@@ -141,7 +141,7 @@ static void do_group( struct group *grp )
                 return;
         }
 
-        if ( gui_resolve_names() ) {
+        if (gui_is_enabled(UI_RESOLVE_NAMES)) {
                 if ( ! (conn_p->metadata.flags & METADATA_RESOLVED )) {
                         connection_resolve( conn_p );
                 }
@@ -204,10 +204,3 @@ int endpoint_input( _UNUSED struct stat_context *ctx, _UNUSED int key )
         /* no commands for endpoint view */
         return 0;
 }
-        
-
-
-
-
-
-

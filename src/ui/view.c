@@ -179,11 +179,8 @@ void ui_input_loop( struct stat_context *ctx )
                 case 'n' :
                 case 'N' :
                         TRACE( "Toggling numeric display\n" );
-                        /* XXX */
-                        if ( gui_toggle_resolve() ) 
-                                OPERATION_ENABLE(ctx, OP_RESOLVE);
-                        else
-                                OPERATION_DISABLE(ctx, OP_RESOLVE);
+                        gui_toggle_operation(UI_RESOLVE_NAMES);
+                        OPERATION_TOGGLE(ctx, OP_RESOLVE);
                         break;
                 case 'I' :
                         TRACE( "Toggling interface stats" );
@@ -191,7 +188,7 @@ void ui_input_loop( struct stat_context *ctx )
                         break;
                 case 'i' :
                         TRACE( "Toggling interface stat diffs" );
-                        gui_toggle_ifdiffs();
+                        gui_toggle_operation(UI_IFSTAT_DIFFS);
                         break;
                 case 'E' :
                         TRACE("Enabling endpoint view\n");

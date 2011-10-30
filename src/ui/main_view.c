@@ -181,7 +181,7 @@ static char *get_live_time( struct conn_metadata *data_p,
         time_t diff = now - data_p->added;
         int i;
 
-        if (!gui_fuzzy_timestamps()) {
+        if (!gui_is_enabled(UI_FUZZY_TIMESTAMPS)) {
                 snprintf(buf,buflen,EXACT_TIME_FMT,diff);
                 return buf;
         }
@@ -230,7 +230,7 @@ static const char *format_string_for_addr()
         cols = gui_get_columns();
 
         if ( cols < GUI_COLUMN_WIDE_LIMIT ) {
-                if ( gui_do_routing() )
+                if (gui_is_enabled(UI_SHOW_ROUTE)) 
                         fmt = conn_format_narrow_rt;
                 else 
                         fmt = conn_format_narrow;
@@ -262,7 +262,7 @@ static void print_connection_addrs( struct tcp_connection *conn_p )
 {
         const char *fmt;
 
-        if ( gui_resolve_names() && ( ! ( conn_p->metadata.flags & METADATA_RESOLVED)) ) {
+        if ( gui_is_enabled(UI_RESOLVE_NAMES) && ( ! ( conn_p->metadata.flags & METADATA_RESOLVED)) ) {
                 connection_resolve( conn_p );
         }
         fmt = format_string_for_addr();
@@ -287,12 +287,12 @@ static void print_connection_addrs( struct tcp_connection *conn_p )
         add_to_linebuf( " %.3s ", dir_to_string( conn_p->metadata.dir ));
 
 
-        if ( gui_resolve_names() && conn_p->metadata.rem_hostname[0] != '\0' ) {
+        if ( gui_is_enabled(UI_RESOLVE_NAMES) && conn_p->metadata.rem_hostname[0] != '\0' ) {
                 add_to_linebuf( fmt, conn_p->metadata.rem_hostname );
         } else {
                 add_to_linebuf( fmt, conn_p->metadata.raddr_string );
         }
-        if ( gui_resolve_names() && conn_p->metadata.rem_servname[0] != '\0' ) {
+        if ( gui_is_enabled(UI_RESOLVE_NAMES) && conn_p->metadata.rem_servname[0] != '\0' ) {
                 add_to_linebuf( servname_format, conn_p->metadata.rem_servname );
         } else {
                 add_to_linebuf( port_format, connection_get_port( conn_p, 0 ));
@@ -361,7 +361,7 @@ static void gui_print_connection( struct tcp_connection *conn_p )
                         conn_p->metadata.ifname?conn_p->metadata.ifname:"N/A");
         print_connection_addrs( conn_p );
 #ifdef ENABLE_ROUTES
-        if ( gui_do_routing() )
+        if (gui_is_enabled(UI_SHOW_ROUTE))
                 print_rt_info( conn_p );
 #endif /* ENABLE_ROUTES */
 
@@ -375,7 +375,6 @@ static void gui_print_connection( struct tcp_connection *conn_p )
         write_linebuf();
 
         attrset(A_NORMAL);
-
 
 }
 
@@ -393,11 +392,11 @@ static void print_titlebar()
         add_to_linebuf( fmt, "Remote address");
         add_to_linebuf( " %5s", "Port" );
 #ifdef ENABLE_ROUTES
-        if ( gui_do_routing() ) {
+        if (gui_is_enabled(UI_SHOW_ROUTE)){
                 /* XXX : we really should not use numbers here */
                 if ( gui_get_columns() < GUI_COLUMN_RT_WIDE_LIMIT )
                         add_to_linebuf( via_narrow_format, "Route");
-                else 
+                else
                         add_to_linebuf( via_wide_format, "Route");
         }
 #endif /* ENABLE_ROUTES */
@@ -475,11 +474,9 @@ static void gui_print_group( struct group *grp, int print_parent, int print_bann
                         add_to_linebuf( "+   Group: %d connections", group_get_size( grp ));
                 }
 
-
                 write_linebuf();
                 attroff( A_UNDERLINE);
         }
-         
         conn_p = group_get_parent( grp );
         if ( conn_p && print_parent ) 
                 gui_print_connection( conn_p );
@@ -527,38 +524,32 @@ int main_input( struct stat_context *ctx, int key )
                         break;
                 case 'A' :
                         TRACE( "Switching grouping to remote address" );
-                        if ( gui_get_current_view() == MAIN_VIEW )
-                                switch_grouping( ctx, POLICY_REMOTE | POLICY_ADDR );
+                        switch_grouping( ctx, POLICY_REMOTE | POLICY_ADDR );
                         break;
                 case 'a' :
                         TRACE( "Swithing the groupint to remote address and port" );
-                        if ( gui_get_current_view() == MAIN_VIEW )
-                                switch_grouping( ctx, POLICY_REMOTE | POLICY_ADDR | POLICY_PORT );
+                        switch_grouping( ctx, POLICY_REMOTE | POLICY_ADDR | POLICY_PORT );
                         break;
                 case 'P' :
                         TRACE( "Switching grouping to remote port " );
-                        if ( gui_get_current_view() == MAIN_VIEW )
-                                switch_grouping( ctx, POLICY_REMOTE | POLICY_PORT );
+                        switch_grouping( ctx, POLICY_REMOTE | POLICY_PORT );
                         break;
                 case 'c' :
                         TRACE("Swithcing to cloud (port) mode" );
-                        if ( gui_get_current_view() == MAIN_VIEW )
-                                switch_grouping( ctx, POLICY_CLOUD | POLICY_REMOTE | POLICY_PORT );
+                        switch_grouping( ctx, POLICY_CLOUD | POLICY_REMOTE | POLICY_PORT );
                         break;
                 case 'S' :
                         TRACE( "Switching grouping to state " );
-                        if ( gui_get_current_view() == MAIN_VIEW )
-                                switch_grouping( ctx, POLICY_STATE );
+                        switch_grouping( ctx, POLICY_STATE );
                         break;
                 case 'T' :
                         TRACE("Toggling fuzzy timestamps");
-                        if (gui_get_current_view() == MAIN_VIEW) 
-                                gui_toggle_fuzzy_timestamps();
+                        gui_toggle_operation(UI_FUZZY_TIMESTAMPS);
                         break;
 #ifdef ENABLE_ROUTES 
                 case 'R' :
                         TRACE("Toggling routing");
-                        gui_toggle_routing();
+                        gui_toggle_operation(UI_SHOW_ROUTE);
                         break;
 #endif /* ENABLE_ROUTES */
                 default :
@@ -633,9 +624,6 @@ int init_main_view( _UNUSED struct stat_context *ctx )
         gui_set_current_view( MAIN_VIEW );
         return 0;
 }
-
-
-
 
 /** 
  * @brief Print information on follow pid -mode. 

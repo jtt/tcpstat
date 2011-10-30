@@ -57,6 +57,12 @@
 #include "printout_curses.h"
 
 /**
+ * Type containing the boolean flags for UI options
+ * which can be enabled/disabled. 
+ */
+typedef uint16_t ui_flags_t;
+
+/**
  * Context holding runtime information for the GUI.
  */
 struct gui_curses_context {
@@ -64,21 +70,29 @@ struct gui_curses_context {
         int columns;/**< Number of columns in use */
         int current_row; /**< Current row we are writing. */
         int current_column; /**< Current column we are writing */
+        int more_lines;/**< Number of lines not shown currently */
         char row_buf[GUI_MAX_ROW_LEN];
-        int more_lines;
-        int do_resolve; /**< Resolve hostnames */
-        int ifstat_diffs;
-        int do_routing; /** Display the routing information */
-        int fuzzy_timestamps;
         enum gui_view view; /**< Currently active view */
+        ui_flags_t flags;
 };
 
+/**
+ * Context holding the current GUI state.
+ */
 static struct gui_curses_context gui_ctx;
+
+/* 
+ * Macros for manipulating the UI context flags
+ */
+#define UI_F_ENABLE(f)(gui_ctx.flags = gui_ctx.flags | (f))
+#define UI_F_DISABLE(f)(gui_ctx.flags = gui_ctx.flags & ~(f))
+#define UI_F_TOGGLE(f)(gui_ctx.flags = gui_ctx.flags ^ (f))
+#define UI_F_CHECK(f)(gui_ctx.flags & (f))
 
 /**
  * Reset the gui context to initial state.
- * The contex will be set with current dimensions and
- * the current row will be reset to 0.
+ * The contex will be set with current dimensions and the current row will be
+ * reset to 0. The flags are not changed.
  */
 void reset_ctx( void )
 {
@@ -94,7 +108,7 @@ void reset_ctx( void )
 }
 
 /** 
- * @brief Get the currently active view mode.
+ *Get the currently active view mode.
  * 
  * @return The viewmode currently active
  */
@@ -103,58 +117,59 @@ enum gui_view gui_get_current_view()
         return gui_ctx.view;
 }
 
+/**
+ * Set the currently active view mode.
+ * @param view The active view mode.
+ */
 void gui_set_current_view( enum gui_view view )
 {
         gui_ctx.view = view;
 }
 
-int gui_print_ifdiffs()
-{
-        return gui_ctx.ifstat_diffs;
-}
-
-int gui_toggle_ifdiffs()
-{
-        gui_ctx.ifstat_diffs = ! gui_ctx.ifstat_diffs;
-        return gui_ctx.ifstat_diffs;
-}
-
-int gui_resolve_names()
-{
-        return gui_ctx.do_resolve;
-}
-
-int gui_toggle_resolve()
-{
-        gui_ctx.do_resolve = ! gui_ctx.do_resolve;
-        return gui_ctx.do_resolve;
-}
-
+/**
+ * Get the number of colums currently available.
+ * @return number of columns we can currently show.
+ */
 int gui_get_columns()
 {
         return gui_ctx.columns;
 }
 
-int gui_do_routing()
+/**
+ * Enable given operation
+ * @param op operation to enable.
+ */
+void gui_enable_operation(enum ui_operation op)
 {
-        return gui_ctx.do_routing;
+        UI_F_ENABLE(op);
 }
 
-int gui_toggle_routing() 
+/**
+ * Disable given operation
+ * @param op operation to disable
+ */
+void gui_disable_operation(enum ui_operation op)
 {
-        gui_ctx.do_routing = ! gui_ctx.do_routing;
-        return gui_ctx.do_routing;
+        UI_F_DISABLE(op);
 }
 
-int gui_fuzzy_timestamps() 
+/**
+ * Check if given operation is enabled
+ * @param op Operation to check.
+ * @return non-zero if the opration is enabled and 0 if not.
+ */
+int gui_is_enabled(enum ui_operation op)
 {
-        return gui_ctx.fuzzy_timestamps;
+        return UI_F_CHECK(op);
 }
 
-int gui_toggle_fuzzy_timestamps()
+/**
+ * Toggle given operation. 
+ * @param op Operation to toggle.
+ */
+void gui_toggle_operation(enum ui_operation op)
 {
-        gui_ctx.fuzzy_timestamps = !gui_ctx.fuzzy_timestamps;
-        return gui_ctx.fuzzy_timestamps;
+        UI_F_TOGGLE(op);
 }
 
 /**
@@ -271,7 +286,6 @@ int write_linebuf_partial( void )
         return rv;
 }
 
-
 /** 
  * @brief Write contents of linebuf to screen, don't change line and turn of
  * given attributes while writing the contents.
@@ -346,11 +360,6 @@ int add_to_linebuf( const char *fmt, ... )
         return rv;
 }
 
-
-
-
-
-
 /**
  * @defgroup gui_c Functions for graphical user interface using ncurses
  * library.
@@ -376,14 +385,14 @@ int gui_init( struct stat_context *ctx )
 
         reset_ctx();
         if ( OPERATION_ENABLED(ctx, OP_RESOLVE) ) 
-                gui_ctx.do_resolve = 1;
+                gui_enable_operation(UI_RESOLVE_NAMES);
         else
-                gui_ctx.do_resolve = 0;
+                gui_disable_operation(UI_RESOLVE_NAMES);
 
-        gui_ctx.ifstat_diffs = 0;
-        gui_ctx.do_routing = 0;
-        gui_ctx.fuzzy_timestamps = 1;
-        gui_ctx.view = MAIN_VIEW;
+        gui_disable_operation(UI_IFSTAT_DIFFS);
+        gui_disable_operation(UI_SHOW_ROUTE);
+        gui_enable_operation(UI_FUZZY_TIMESTAMPS);
+        gui_set_current_view(MAIN_VIEW);
 
         return 0;
 }
