@@ -37,6 +37,9 @@
  */
 #ifndef _TCPIP_H_
 #define _TCPIP_H_
+#ifdef OPENBSD
+#include <sys/socket.h>
+#endif
 #include <netinet/in.h>
 
 struct tcp_hdr *pkt_get_tcp( struct raw_packet *pkt);
