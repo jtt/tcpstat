@@ -1017,7 +1017,49 @@ void ss_set_port( struct sockaddr_storage *ss, in_port_t port)
         }
 }
 
+/**
+ * Check if two sockaddresses match. 
+ * Returns verdict indicating that there was no match (address families did not
+ * match, or ports and addresses were different) or if either port number of
+ * addresses or both matched.
+ *
+ * @param ss1 First socket address to check.
+ * @param ss2 Second socket address to check.
+ * @return Verdict for the match.
+ */
+enum ss_match_verdict ss_match(struct sockaddr_storage *ss1,
+                struct sockaddr_storage *ss2)
+{
+        size_t addrlen; 
+        enum ss_match_verdict ret = MATCH_NONE;
+        void *addr1, *addr2;
 
+        if (ss1->ss_family != ss2->ss_family)
+                return ret;
+
+        if (ss_get_port(ss1) == ss_get_port(ss2))
+                ret = MATCH_PORT;
+
+        if (ss1->ss_family == AF_INET) {
+                addrlen = sizeof(struct in_addr);
+                addr1 = ss_get_addr(ss1);
+                addr2 = ss_get_addr(ss2);
+        } else if (ss1->ss_family == AF_INET6) {
+                addrlen = sizeof(struct in6_addr);
+                addr1 = ss_get_addr6(ss1);
+                addr2 = ss_get_addr6(ss2);
+        } else {
+                return MATCH_NONE; // invalid address family, can not check
+        }
+
+        if (!memcmp(addr1,addr2,addrlen)) {
+                if (ret == MATCH_PORT)
+                        ret = MATCH_BOTH;
+                else
+                        ret = MATCH_ADDRESS;
+        }
+        return ret;
+}
 
 /**
  * Get the IPv4 address from IPv6 mapped IPv4 address. 

@@ -167,7 +167,7 @@ struct filter *filter_from_connection( struct tcp_connection *conn_p,
  * and port are defined in the policy, the whole sockaddr_storage structures
  * are compared.
  *
- * @note If neither POLICY_ADDR not POLICY_PORT is defined on the
+ * @note If neither POLICY_ADDR nor POLICY_PORT is defined on the
  * policy, 1 is returned.
  *
  * @param filt_addr Pointer to filters address structure.
@@ -181,53 +181,33 @@ static int match_saddr( struct sockaddr_storage *filt_addr,
                 struct sockaddr_storage *conn_addr, policy_flags_t pol )
 {
         int rv = 0;
-        in_port_t port1, port2;
+        enum ss_match_verdict verdict;
 
         if ( (pol & ( POLICY_ADDR | POLICY_PORT )) == 0 ) {
                 TRACE( "Match, no addr or port on policy \n" );
                 return 1;
         }
 
-
+        verdict = ss_match(filt_addr,conn_addr);
         switch( pol & (POLICY_ADDR | POLICY_PORT) ) {
 
                 case (POLICY_ADDR|POLICY_PORT) :
                         TRACE( "Matching address and port\n");
-                        if ( filt_addr->ss_family != conn_addr->ss_family ) {
-                                TRACE( "No match, address families differ!\n" );
-                                return 0;
-                        }
-                        if( (memcmp(filt_addr, conn_addr, 
-                                             sizeof(struct sockaddr_storage))) == 0 ) {
+                        if (verdict == MATCH_BOTH)
                                 rv = 1;
-                        }
+
                         break;
                 case POLICY_ADDR :
                         TRACE("Matching address\n");
-                        if ( filt_addr->ss_family != conn_addr->ss_family ) {
-                                TRACE( "No match, address families differ!\n" );
-                                return 0;
-                        }
-                        if ( filt_addr->ss_family == AF_INET ) {
-                                if( memcmp( ss_get_addr( filt_addr), ss_get_addr( conn_addr ),
-                                               sizeof( struct in_addr ) ) == 0) {
-                                        rv = 1;
-                                }
-                        } else {
-                                if (memcmp( ss_get_addr6(filt_addr), ss_get_addr6(conn_addr),
-                                               sizeof( struct in6_addr ) ) == 0 ) {
-                                        rv  = 1;
-                                }
-                        }
+                        if (verdict == MATCH_BOTH || verdict == MATCH_ADDRESS)
+                                rv = 1;
 
                         break;
                 case POLICY_PORT :
                         TRACE("Matching port\n" );
-                        port1 = ss_get_port(filt_addr);
-                        port2 = ss_get_port(conn_addr);
-
-                        if ( port1 == port2 ) 
+                        if (verdict == MATCH_BOTH || verdict == MATCH_PORT)
                                 rv = 1;
+
                         break;
         }
 

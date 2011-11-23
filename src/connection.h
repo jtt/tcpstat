@@ -261,11 +261,26 @@ int connection_resolve( struct tcp_connection *conn_p );
 int connection_do_addrstrings( struct tcp_connection *con_p );
 uint16_t connection_get_port( struct tcp_connection *conn, int local );
 
+/* struct sockaddr_storage utilities */
+
 struct in6_addr *ss_get_addr6( struct sockaddr_storage *ss);
 struct in_addr *ss_get_addr( struct sockaddr_storage *ss );
 in_port_t ss_get_port( struct sockaddr_storage *ss);
 in_addr_t sin6_get_v4addr( struct sockaddr_in6 *sin6 );
 void ss_set_port( struct sockaddr_storage *ss, in_port_t port);
+
+/**
+ * Verdict returned by ss_match() function
+ */
+enum ss_match_verdict {
+        MATCH_NONE,/**< No match */
+        MATCH_ADDRESS, /**< Only addresses matched */
+        MATCH_PORT,/**< Only port numbers matched */
+        MATCH_BOTH /**< Both Port number and address matched */
+};
+
+enum ss_match_verdict ss_match(struct sockaddr_storage *ss1, struct
+                sockaddr_storage *ss2);
 
 
 /* Function prototypes for the connection hash table */
