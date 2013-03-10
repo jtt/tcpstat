@@ -153,7 +153,7 @@ static void print_help( char *name  )
 #ifdef BUILDID
         printf( "%s %s Build:%s (c) J. Taimisto 2005-2010 \n", name, VERSION, BUILDID );
 #else
-        printf( "%s %s (c) J. Taimisto 2005-2010 \n", name, VERSION );
+        printf( "%s %s (c) J. Taimisto 2005-2013 \n", name, VERSION );
 #endif /* BUILDID */
         printf( "Usage %s [options], where options are: \n",name );
         printf( "\t--help or -h:\t Print this text \n" );

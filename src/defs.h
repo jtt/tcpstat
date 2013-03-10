@@ -41,7 +41,7 @@
 #ifndef _DEFS_H_
 #define _DEFS_H_
 
-#define VERSION "0.1-dev"
+#define VERSION "0.1"
 
 /*
 #define DEBUG 
