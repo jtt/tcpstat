@@ -262,116 +262,30 @@ int chash_put( struct chashtable *connection_hash, struct tcp_connection *conn_p
 }
 
 /**
- * Compare given IPv4 addresses to a node on the linked list. 
- *
- * This function checks if the given addresses are the key for the connection
- * on the given node. 
- *
- * @todo Simplify, simplify, simplify
+ * Check if given addresses match a connection on a linked
+ * list
  *
  * @param laddr_p Pointer to the local address structure.
  * @param raddr_p Pointer to the remote address structure.
  * @param node_p Pointer to the node to compare.
- * @return 1 if given addresses are the key for connection on the node, 0
- * otherwise.
+ * @return 1 if given addresses match for the connection, 0 if not.
  */ 
-static int key_cmp_v4( struct sockaddr_in *laddr_p, struct sockaddr_in *raddr_p, 
-                struct chlist_node *node_p ) 
-{
-        int rv = 0;
-
-        struct sockaddr_in *nlinp = LADDR_SIN(node_p->connection);
-        struct sockaddr_in *nrinp = RADDR_SIN(node_p->connection);
-
-#if 0
-        TRACE( "Laddr %s %d \n", inet_ntoa( linp->sin_addr ), linp->sin_port );
-        TRACE( "Raddr %s %d \n", inet_ntoa( rinp->sin_addr ), rinp->sin_port );
-        TRACE( "node Laddr %s %d \n", inet_ntoa( nlinp->sin_addr ), nlinp->sin_port );
-        TRACE( "node Raddr %s %d \n", inet_ntoa( nrinp->sin_addr ), nrinp->sin_port );
-#endif /* 0 */
-
-        if ( laddr_p->sin_addr.s_addr == nlinp->sin_addr.s_addr &&
-                        laddr_p->sin_port == nlinp->sin_port &&
-                        raddr_p->sin_addr.s_addr == nrinp->sin_addr.s_addr &&
-                        raddr_p->sin_port == nrinp->sin_port ) { 
-
-                TRACE( "Equal\n" );
-                rv = 1;
-        }
-
-        return rv;
-}
-/**
- * Compare given IPv6 addresses to a node on the linked list. 
- *
- * This function checks if the given addresses are the key for the connection
- * on the given node. 
- *
- * @todo Simplify, simplify, simplify
- *
- * @param laddr_p Pointer to the local address structure.
- * @param raddr_p Pointer to the remote address structure.
- * @param node_p Pointer to the node to compare.
- * @return 1 if given addresses are the key for connection on the node, 0
- * otherwise.
- */ 
-static int key_cmp_v6( struct sockaddr_in6 *laddr_p, struct sockaddr_in6 *raddr_p, 
-                struct chlist_node *node_p ) 
-{
-        int rv = 0;
-
-        struct sockaddr_in6 *nlinp = LADDR_SIN6(node_p->connection);
-        struct sockaddr_in6 *nrinp = RADDR_SIN6(node_p->connection);
-
-        if ( memcmp( &(laddr_p->sin6_addr.s6_addr), &(nlinp->sin6_addr.s6_addr), 16) == 0 &&
-             laddr_p->sin6_port == nlinp->sin6_port && 
-             memcmp( &(laddr_p->sin6_addr.s6_addr), &(nlinp->sin6_addr.s6_addr), 16 ) == 0 &&
-             raddr_p->sin6_port == nrinp->sin6_port ) {
-                TRACE( "Equal\n" );
-                rv = 1;
-        }
-        return rv;
-}
-
-/**
- * Compare given addresses to a node on the linked list. 
- *
- * This is address family independent wrapper function which calls the proper
- * comprison function for the address family.  This function checks if the
- * given addresses are the key for the connection on the given node. 
- *
- * @todo Simplify, simplify, simplify
- * @see key_cmp_v4(), key_cmp_v6()
- *
- * @param laddr_p Pointer to the local address structure.
- * @param raddr_p Pointer to the remote address structure.
- * @param node_p Pointer to the node to compare.
- * @return 1 if given addresses are the key for connection on the node, 0
- * otherwise.
- */ 
-static int key_cmp( struct sockaddr_storage *laddr_p, 
+static int key_cmp( struct sockaddr_storage *laddr_p,
                 struct sockaddr_storage *raddr_p, struct chlist_node *node_p )
 {
+        struct sockaddr_storage *node_raddr, *node_laddr;
+
         ASSERT( laddr_p->ss_family == raddr_p->ss_family );
         
-        if ( laddr_p->ss_family != node_p->connection->laddr.ss_family ) {
-                TRACE("Not equal, address families don't match\n");
-                return 0;
-        }
-        if ( laddr_p->ss_family == AF_INET ) {
-                return key_cmp_v4( (struct sockaddr_in *)laddr_p,
-                                (struct sockaddr_in *)raddr_p,
-                                node_p );
-        } else if ( laddr_p->ss_family == AF_INET6 ) {
-                return key_cmp_v6( (struct sockaddr_in6 *)laddr_p,
-                                (struct sockaddr_in6 *)raddr_p,
-                                node_p );
-        }
-        WARN( "Unknown address family %d\n", laddr_p->ss_family );
-        return 0;
-}
-                
+        node_raddr = RADDR(node_p->connection);
+        node_laddr = LADDR(node_p->connection);
 
+        if (ss_match(laddr_p,node_laddr) != MATCH_BOTH ||
+            ss_match(raddr_p,node_raddr) != MATCH_BOTH)
+                return 0;
+
+        return 1;
+}
 
 /**
  * Get connection which has the key defined by the given addresses. 
