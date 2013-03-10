@@ -96,7 +96,6 @@ enum dbg_module {
         DBG_MODULE_RT,
         DBG_MODULE_VIEW,
         DBG_MODULE_READER,
-        DBG_MODULE_PKT,
         DBG_MODULE_GENERIC /* this should always be the last */
 };
 #endif /* DPRINT_MODULE */

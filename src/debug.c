@@ -126,7 +126,6 @@ struct dbg_module_info dbg_modules[] = {
         {"RTINFO", DEBUG_DEFAULT_LEVEL},
         {"VIEW", DEBUG_DEFAULT_LEVEL },
         {"READER", DEBUG_DEFAULT_LEVEL },
-        {"PACKET", DEBUG_DEFAULT_LEVEL },
         {"GENERIC",DEBUG_DEFAULT_LEVEL},
 };
 #endif /* DPRINT_MODULE */

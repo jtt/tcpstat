@@ -218,21 +218,4 @@ struct pidinfo *init_pidinfo( int pid );
 struct pidinfo *get_pidinfo_by_inode( ino_t inode, struct pidinfo *info_p );
 #endif /* ENABLE_FOLLOW_PID */
 
-#include "packet/packet_reader.h"
-
-struct packet_context {
-        char pcap_name[MAX_FILENAME_LEN];
-        reader_handle_t handle;
-
-        /* stats */
-        long total_packets;
-        long malformed_packets;
-        long tcp_packets;
-};
-
-/*
- * Packet reader API
- */
-int read_packet_stat(struct stat_context *ctx);
-
 #endif /* _SCOUTS_H_ */

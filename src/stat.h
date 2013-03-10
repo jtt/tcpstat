@@ -82,12 +82,6 @@
 #define OP_SHOW_LISTEN 0x10
 
 /**
- * Try to get connections from pcap file instead of 
- * displaying current "real" status
- */
-#define OP_PCAP 0x20
-
-/**
  * typedef for the type holding the operation flags,
  */
 typedef uint8_t operation_flags_t;
